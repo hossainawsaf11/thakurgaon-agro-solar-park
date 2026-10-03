@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thakurgaon Agro-Solar Park</title>
+<meta name="description" content="Interactive 3D concept masterplan of the Thakurgaon Sugar Mills Agro-Solar Park, Bangladesh, traced on the local map, with Phase 4 to 500 MW.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: full-bleed 3D masterplan; title card top-left, project panel docked right (bottom sheet on phones), data-view switch floats beside the panel. Single daylight look by design. */
+:root{
+  --haze:#DCE5E1;
+  --panel:rgba(248,251,249,.93);
+  --ink:#14261D;
+  --muted:#4E6158;
+  --line:#C3D0C9;
+  --accent:#B87A0C;
+  --leaf:#2F6B47;
+  --pill:#173327;
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--haze);color:var(--ink);font-family:var(--body);overflow:hidden}
+#stage{position:fixed;inset:0}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.card{background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 28px rgba(20,38,29,.12)}
+#titlecard{box-sizing:border-box;position:fixed;z-index:3;top:calc(16px + env(safe-area-inset-top,0px));left:16px;padding:14px 18px;max-width:min(470px,calc(100% - 560px))}
+#titlecard .eyebrow{font:500 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+#titlecard h1{font:700 clamp(21px,2.6vw,29px)/1.08 var(--display);margin:6px 0;text-wrap:balance;letter-spacing:-.01em}
+#titlecard p{margin:0;font-size:13px;line-height:1.45;color:var(--muted)}
+#panel{position:fixed;z-index:3;top:calc(16px + env(safe-area-inset-top,0px));right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:350px;display:flex;flex-direction:column;gap:14px;padding:16px;overflow-y:auto;box-sizing:border-box}
+.sec-label{font:500 10.5px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:rgba(255,255,255,.55);min-width:0}
+.kpi b{display:block;font:700 17px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.kpi span{font-size:11.5px;color:var(--muted);line-height:1.3;display:block;margin-top:2px}
+.kpi.hl b{color:var(--accent)}
+.zones{display:flex;flex-direction:column;gap:3px}
+.zone{display:grid;grid-template-columns:14px 1fr auto;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:7px;padding:7px 8px;font:500 13px/1.3 var(--body);color:var(--ink);cursor:pointer}
+.zone:hover{background:rgba(47,107,71,.07)}
+.zone[aria-pressed="true"]{border-color:var(--leaf);background:rgba(47,107,71,.09)}
+.zone:focus-visible,.ph:focus-visible,#reset:focus-visible,.chip:focus-visible,#dataBtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sw{width:14px;height:14px;border-radius:3px}
+.zone small{font:400 11.5px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.phases{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.ph{border:0;background:rgba(255,255,255,.5);padding:8px 2px;font:500 11.5px/1.25 var(--body);color:var(--ink);cursor:pointer;border-right:1px solid var(--line)}
+.ph b{display:block;font:700 13px var(--display)}
+.ph:last-child{border-right:0}
+.ph[aria-pressed="true"]{background:var(--leaf);color:#fff}
+.ph[data-p="4"][aria-pressed="true"]{background:#2D5C8F}
+#phasenote{font-size:12.5px;color:var(--ink);margin-top:8px;line-height:1.45}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:rgba(255,255,255,.65);border-radius:999px;padding:5px 10px;font:500 12px/1.2 var(--body);color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--leaf);background:rgba(47,107,71,.08)}
+#detail{border-top:1px solid var(--line);padding-top:12px}
+#detail h2{font:700 18px/1.15 var(--display);margin:0 0 4px}
+#detail p{font-size:13px;line-height:1.5;margin:0 0 10px}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12.5px;margin:0}
+.facts dt{color:var(--muted)}
+.facts dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+#reset{align-self:flex-start;border:1px solid var(--line);background:rgba(255,255,255,.6);border-radius:6px;padding:6px 10px;font:500 12px var(--body);color:var(--ink);cursor:pointer}
+#foot{position:fixed;z-index:3;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));padding:9px 12px;max-width:min(600px,calc(100% - 470px));font-size:11.5px;line-height:1.45;color:var(--muted)}
+#foot b{color:var(--ink);font-weight:600}
+#labels{position:fixed;inset:0;pointer-events:none;z-index:2}
+.lbl{position:absolute;transform:translate(-50%,-100%);pointer-events:auto;cursor:pointer;white-space:nowrap;font:600 12.5px/1 var(--body);color:#fff;background:var(--pill);border:1.5px solid #fff;border-radius:999px;padding:6px 11px 6px 8px;display:flex;align-items:center;gap:7px;box-shadow:0 4px 12px rgba(0,0,0,.28)}
+.lbl[hidden]{display:none}
+.lbl i{width:10px;height:10px;border-radius:50%;flex:none;border:1.5px solid #fff}
+.lbl::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:16px;background:var(--pill)}
+.lbl.minor{font-weight:600;font-size:11px;color:var(--pill);background:#fff;border:1.5px solid var(--pill);padding:4px 9px}
+.lbl.minor::after{height:10px}
+.lbl.p4{background:#2D5C8F}
+.lbl.p4::after{background:#2D5C8F}
+#compass{position:fixed;z-index:3;right:382px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:44px;height:44px;border-radius:50%;display:grid;place-items:center}
+#compass svg{width:30px;height:30px}
+#dataBtn{position:fixed;z-index:4;top:calc(16px + env(safe-area-inset-top,0px));right:382px;display:flex;align-items:center;gap:9px;padding:8px 13px 8px 9px;font:600 12.5px/1 var(--body);color:var(--ink);cursor:pointer;border-radius:999px}
+#dataBtn .tg{width:32px;height:18px;border-radius:999px;background:var(--leaf);position:relative;flex:none;transition:background .2s}
+#dataBtn .tg::after{content:"";position:absolute;top:2px;left:16px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s}
+#dataBtn[aria-pressed="false"] .tg{background:#9AA8A1}
+#dataBtn[aria-pressed="false"] .tg::after{left:2px}
+#dataBtn small{font:500 11px var(--mono);color:var(--muted)}
+body.clean #titlecard,body.clean #panel,body.clean #foot,body.clean #labels,body.clean #compass{display:none}
+body.clean #dataBtn{right:16px}
+@media (max-width:820px){
+  #titlecard{max-width:calc(100% - 32px)}
+  #panel{top:auto;left:16px;right:16px;width:auto;height:42%;bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+  #foot{display:none}
+  #compass{right:auto;left:16px;bottom:calc(42% + 28px + env(safe-area-inset-bottom,0px))}
+  #dataBtn{top:auto;right:16px;bottom:calc(42% + 28px + env(safe-area-inset-bottom,0px))}
+  body.clean #dataBtn{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+  #titlecard p{display:none}
+  .lbl.minor{font-size:10.5px}
+  .lbl{font-size:11px;padding:5px 9px 5px 7px}
+}
+@media (prefers-reduced-motion: reduce){#dataBtn .tg,#dataBtn .tg::after{transition:none}}
+</style>
+
+</head>
+<body>
+<div id="stage"></div>
+<div id="labels"></div>
+
+<header id="titlecard" class="card">
+  <div class="eyebrow">Concept masterplan · October 2026</div>
+  <h1>Thakurgaon Sugar Mills Agro-Solar Park</h1>
+  <p>Raised solar earns long-term power income while certified seed, dairy, halal mozzarella, compost and a green multi-crop cold store run on the same ~2,800-acre estate beside Thakurgaon Road station. Phase 4 can scale solar to 500 MW.</p>
+</header>
+
+<button id="dataBtn" class="card" type="button" aria-pressed="true" title="Show or hide the data view (key D)"><span class="tg" aria-hidden="true"></span><span>Data view</span><small id="dataState">On</small></button>
+
+<aside id="panel" class="card" aria-label="Project panel">
+  <section>
+    <div class="sec-label">Project at a glance (targets)</div>
+    <div class="kpis">
+      <div class="kpi hl"><b>Tk 1,250 cr</b><span>Phases 1 to 3: Tk 25 cr, then 125 cr, then 1,250 cr</span></div>
+      <div class="kpi hl"><b>Tk 4,232 cr</b><span>whole park with Phase 4 (500 MW), up to 6% finance</span></div>
+      <div class="kpi"><b>100 to 500 MW</b><span>~100 MW in Phases 1 to 3; 500 MW with Phase 4</span></div>
+      <div class="kpi"><b>~2,800 acres</b><span>usable estate, 30-year lease</span></div>
+      <div class="kpi"><b>2 × 500 t</b><span>green multi-crop cold store, solar–grid hybrid</span></div>
+      <div class="kpi"><b>24% to 45%</b><span>year-1 net profit before tax, 100 vs 500 MW</span></div>
+      <div class="kpi"><b>~1.1 to 5.5 lakh</b><span>homes powered, 100 to 500 MW</span></div>
+      <div class="kpi"><b>~0.7%</b><span>of national power at 500 MW (~725 GWh a year)</span></div>
+      <div class="kpi"><b>~700 jobs</b><span>at full build-out, plus ~600 in construction</span></div>
+      <div class="kpi"><b>~Tk 140 cr</b><span>a year to agriculture GDP (~0.023%)</span></div>
+    </div>
+  </section>
+  <section>
+    <div class="sec-label">Build phases (cumulative), each gated on the last</div>
+    <div class="phases" role="group" aria-label="Build phase">
+      <button class="ph" data-p="1" aria-pressed="false"><b>Phase 1</b>Tk 25 cr</button>
+      <button class="ph" data-p="2" aria-pressed="false"><b>Phase 2</b>Tk 125 cr</button>
+      <button class="ph" data-p="3" aria-pressed="true"><b>Phase 3</b>Tk 1,250 cr</button>
+      <button class="ph" data-p="4" aria-pressed="false"><b>Phase 4</b>500 MW</button>
+    </div>
+    <div id="phasenote"></div>
+  </section>
+  <section>
+    <div class="sec-label">Zones · tap to fly there</div>
+    <div class="zones" id="zonelist"></div>
+  </section>
+  <section>
+    <div class="sec-label">Close-up views · people at work</div>
+    <div class="chips" id="views"></div>
+  </section>
+  <section id="detail" aria-live="polite"></section>
+  <button id="reset" type="button">Reset view</button>
+</aside>
+
+<div id="foot" class="card"><b>Drag</b> to orbit, <b>scroll or pinch</b> to zoom right down to people at work, <b>right-drag</b> to pan, <b>D</b> toggles the data view. Railway, Thakurgaon Road station, the mill and the roads are traced from the map; the estate boundary is indicative, not surveyed, and figures are targets subject to a site feasibility study.</div>
+<div id="compass" class="card" aria-hidden="true"><svg viewBox="0 0 30 30"><path id="needle" d="M15 3 L19 16 L15 14 L11 16 Z" fill="#B87A0C"/><text x="15" y="27" text-anchor="middle" font-size="7" font-family="IBM Plex Mono,monospace" fill="#14261D">N</text></svg></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+const STILL=/[?#]still/.test(location.href);
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stage=document.getElementById('stage');
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+stage.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+const HAZE=0xdce5e1;
+scene.background=new THREE.Color(HAZE);
+scene.fog=new THREE.Fog(HAZE,950,2400);
+
+const camera=new THREE.PerspectiveCamera(38,1,.5,7000);
+const controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=.08;controls.screenSpacePanning=false;
+controls.maxPolarAngle=1.47;controls.minDistance=2.2;controls.maxDistance=1500;controls.zoomSpeed=1.15;
+controls.autoRotate=!STILL&&!RM;controls.autoRotateSpeed=.22;
+const stopSpin=()=>{controls.autoRotate=false};
+renderer.domElement.addEventListener('pointerdown',stopSpin);
+renderer.domElement.addEventListener('wheel',stopSpin,{passive:true});
+
+scene.add(new THREE.HemisphereLight(0xf2f6ff,0x6b7d4f,.75));
+const sun=new THREE.DirectionalLight(0xfff1dc,1.25);
+const SUN_DIR=new THREE.Vector3(-260,340,180).normalize();
+sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.0004;sun.shadow.normalBias=.02;
+scene.add(sun,sun.target);
+
+// ---------- frame: km (x east, y north, origin = Thakurgaon Sugar Mills marker) -> world units of 10 m ----------
+const CX=-80,CY=140;
+const W=(x,y)=>[x*100-CX,-(y*100-CY)];
+function rect(x0,y0,x1,y1){const a=W(x0,y1),b=W(x1,y0);return{x:(a[0]+b[0])/2,z:(a[1]+b[1])/2,w:b[0]-a[0],d:b[1]-a[1],x0:a[0],z0:a[1],x1:b[0],z1:b[1]};}
+const inR=(r,x,z,m=0)=>x>r.x0-m&&x<r.x1+m&&z>r.z0-m&&z<r.z1+m;
+const rnd=(()=>{let s=11;return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646;}})();
+const R=(a,b)=>a+(b-a)*rnd(), pick=a=>a[(rnd()*a.length)|0];
+function mat(c,o={}){return new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.85,metalness:0},o));}
+function box(w,h,d,m,x,y,z,parent){const g=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);g.position.set(x,y+h/2,z);g.castShadow=true;g.receiveShadow=true;(parent||scene).add(g);return g;}
+function cyl(r,h,m,x,y,z,parent,seg){const g=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,seg||16),m);g.position.set(x,y+h/2,z);g.castShadow=true;g.receiveShadow=true;(parent||scene).add(g);return g;}
+function canvasTex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=8;if(rep)t.repeat.set(rep[0],rep[1]);return t;}
+const M=new THREE.Matrix4(),Q=new THREE.Quaternion(),Q2=new THREE.Quaternion(),V=new THREE.Vector3(),V2=new THREE.Vector3(),SC=new THREE.Vector3(1,1,1),ONE=new THREE.Vector3(1,1,1),E=new THREE.Euler(),YA=new THREE.Vector3(0,1,0),XA=new THREE.Vector3(1,0,0);
+const col=new THREE.Color();
+const ZERO=new THREE.Matrix4().makeScale(0,0,0);
+
+// phase groups: P[0] existing, P[1] built in phase 1, ... P[4] the 500 MW option
+const P={0:new THREE.Group(),1:new THREE.Group(),2:new THREE.Group(),3:new THREE.Group(),4:new THREE.Group()};
+Object.values(P).forEach(g=>scene.add(g));
+
+// ---------- polyline helpers ----------
+function smoothPts(km,step){const v=km.map(p=>{const q=W(p[0],p[1]);return new THREE.Vector3(q[0],0,q[1]);});
+  if(v.length<3)return v.map(p=>[p.x,p.z]);
+  const c=new THREE.CatmullRomCurve3(v,false,'centripetal');const n=Math.max(2,Math.ceil(c.getLength()/(step||1.5)));return c.getSpacedPoints(n).map(p=>[p.x,p.z]);}
+function linPts(km){return km.map(p=>W(p[0],p[1]));}
+function segDist(px,pz,a,b){const dx=b[0]-a[0],dz=b[1]-a[1],l2=dx*dx+dz*dz||1;let t=((px-a[0])*dx+(pz-a[1])*dz)/l2;t=t<0?0:t>1?1:t;const x=a[0]+dx*t-px,z=a[1]+dz*t-pz;return Math.sqrt(x*x+z*z);}
+function bbox(pts){let a=1e9,b=-1e9,c=1e9,d=-1e9;pts.forEach(p=>{a=Math.min(a,p[0]);b=Math.max(b,p[0]);c=Math.min(c,p[1]);d=Math.max(d,p[1]);});return[a,b,c,d];}
+function polyInfo(px,pz,pts){let m=1e9,ang=0;for(let i=0;i<pts.length-1;i++){const d=segDist(px,pz,pts[i],pts[i+1]);if(d<m){m=d;ang=Math.atan2(pts[i+1][1]-pts[i][1],pts[i+1][0]-pts[i][0]);}}return[m,ang];}
+function offsetPoly(pts,off){const n=pts.length;return pts.map((p,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(n-1,i+1)];let dx=b[0]-a[0],dz=b[1]-a[1];const l=Math.hypot(dx,dz)||1;return[p[0]+dz/l*off,p[1]-dx/l*off];});}
+function ribbon(pts,w,y,material,parent,uvLen){
+  const n=pts.length,pos=new Float32Array(n*6),uv=new Float32Array(n*4),idx=[];let d=0;
+  for(let i=0;i<n;i++){const a=pts[Math.max(0,i-1)],b=pts[Math.min(n-1,i+1)];let dx=b[0]-a[0],dz=b[1]-a[1];const l=Math.hypot(dx,dz)||1;dx/=l;dz/=l;
+    if(i>0)d+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);
+    const nx=dz,nz=-dx,v=d/(uvLen||w);
+    pos.set([pts[i][0]+nx*w/2,y,pts[i][1]+nz*w/2,pts[i][0]-nx*w/2,y,pts[i][1]-nz*w/2],i*6);uv.set([0,v,1,v],i*4);
+    if(i<n-1){const k=i*2;idx.push(k,k+1,k+2,k+1,k+3,k+2);}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
+  const m=new THREE.Mesh(g,material);m.receiveShadow=true;(parent||scene).add(m);return m;}
+function polyGround(ptsW,material,y,parent){const s=new THREE.Shape(ptsW.map(p=>new THREE.Vector2(p[0],p[1])));const g=new THREE.ShapeGeometry(s);g.rotateX(Math.PI/2);material.side=THREE.DoubleSide;const m=new THREE.Mesh(g,material);m.position.y=y;m.receiveShadow=true;(parent||scene).add(m);return m;}
+function mkPath(pts){const cum=[0];for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));return{pts,cum,L:cum[cum.length-1]};}
+function along(Pt,s,o){s=Math.max(0,Math.min(Pt.L,s));let lo=1,hi=Pt.cum.length-1;while(lo<hi){const m=(lo+hi)>>1;if(Pt.cum[m]<s)lo=m+1;else hi=m;}
+  const a=Pt.pts[lo-1],b=Pt.pts[lo],seg=(Pt.cum[lo]-Pt.cum[lo-1])||1,t=(s-Pt.cum[lo-1])/seg;o.x=a[0]+(b[0]-a[0])*t;o.z=a[1]+(b[1]-a[1])*t;o.dx=(b[0]-a[0])/seg;o.dz=(b[1]-a[1])/seg;return o;}
+const AL={x:0,z:0,dx:1,dz:0};
+// piecewise x of a km polyline at a given northing
+function xAt(km,y){for(let i=0;i<km.length-1;i++){const a=km[i],b=km[i+1];if((y-a[1])*(y-b[1])<=0&&a[1]!==b[1])return a[0]+(b[0]-a[0])*(y-a[1])/(b[1]-a[1]);}return null;}
+
+// ---------- textures ----------
+function stripeTex(bg,row,gap,noise){return canvasTex(256,256,(g,w,h)=>{g.fillStyle=bg;g.fillRect(0,0,w,h);g.strokeStyle=row;g.lineWidth=gap*.55;for(let i=0;i<w*2;i+=gap){g.beginPath();g.moveTo(i,0);g.lineTo(i,h);g.stroke();}for(let k=0;k<(noise||500);k++){g.fillStyle='rgba(30,50,20,.09)';g.fillRect(rnd()*w,rnd()*h,2,2);}});}
+const outerTex=canvasTex(1024,1024,(g,w,h)=>{const greens=['#a9bd7e','#9fb874','#b8c78a','#93ad6b','#c2c98e','#aebf80','#8fa866','#c9c58a','#b9b874','#9bb36f'];g.fillStyle='#c8c19a';g.fillRect(0,0,w,h);
+  for(let y=0;y<h;){const rh=16+rnd()*34;for(let x=0;x<w;){const rw=20+rnd()*64;g.fillStyle=greens[(rnd()*greens.length)|0];g.fillRect(x+1.5,y+1.5,rw-3,rh-3);g.fillStyle='rgba(60,80,30,.07)';for(let k=0;k<rw/6;k++)g.fillRect(x+2+k*6,y+2,1.2,rh-4);x+=rw;}y+=rh;}},[60,60]);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(6000,6000),mat(0xffffff,{map:outerTex}));
+ground.rotation.x=-Math.PI/2;ground.position.y=-.02;ground.receiveShadow=true;scene.add(ground);
+const cropTex=[stripeTex('#5f8f3e','#3f6e2a',10),stripeTex('#a8b54a','#7f9234',8),stripeTex('#6f9c48','#527d35',12),stripeTex('#88a845','#6c8c35',9)];
+const fallowTex=stripeTex('#a99773','#937f5c',11);
+const fodTex=[stripeTex('#7fae5a','#6b9a4a',14),stripeTex('#8dbb63','#77a552',16)];
+const grassTex=stripeTex('#a9b67f','#98a66f',13);
+const roadTex=canvasTex(64,256,(g,w,h)=>{g.fillStyle='#7d807b';g.fillRect(0,0,w,h);for(let k=0;k<900;k++){g.fillStyle=rnd()<.5?'rgba(255,255,255,.05)':'rgba(0,0,0,.06)';g.fillRect(rnd()*w,rnd()*h,1.5,1.5);}
+  g.fillStyle='rgba(240,240,232,.75)';g.fillRect(2,0,2,h);g.fillRect(w-4,0,2,h);g.fillStyle='rgba(245,240,225,.9)';g.fillRect(w/2-1.5,0,3,h*.45);});
+const tarMain=mat(0xffffff,{map:roadTex,roughness:.92}),tarMinor=mat(0x9d9b93,{roughness:.95}),dirtMat=mat(0xb9a98a,{roughness:1}),shoulderMat=mat(0xb0a587,{roughness:1});
+const water=mat(0x4f8fa8,{roughness:.12,metalness:.3}),bankMat=mat(0x9a8e6c,{roughness:1}),grassMat=mat(0x9db270,{roughness:1});
+
+// ---------- zones (km) ----------
+const AGW=rect(-2.5,0.1,-1.3,1.95);     // agrivoltaic, west block
+const AGN=rect(-1.3,0.72,0.9,1.95);     // agrivoltaic, north of the mill
+const SAL=rect(-2.5,1.95,-0.4,3.55);    // Salandar seed farm
+const FOD=rect(-0.4,1.95,0.9,3.55);     // fodder and grazing
+const HUB=rect(-1.3,0.22,-0.5,0.66);    // livestock, milk, mozzarella, cold storage
+const SUB=rect(0.32,0.76,0.56,0.98);
+const PILOT=rect(-0.42,0.76,-0.16,0.96);
+const BLK5=rect(-0.08,0.76,0.3,1.3);
+const P4R=rect(-4.7,0.25,-2.6,2.45);    // Phase 4 option: 400 MW ground-mount
+const ESTATE=[AGW,AGN,SAL,FOD,HUB];
+const inEstate=(x,z,m=0)=>ESTATE.some(r=>inR(r,x,z,m))||inR(P4R,x,z,m);
+
+// ---------- railway (Panchagarh line, traced through Thakurgaon Road) ----------
+const RAILKM=[[-1.7,6],[-1.45,4.6],[-1.25,3.45],[-1.12,2.3],[-1.0,1.6],[-0.8,1.05],[-0.548,0.742],[-0.398,0.581],[-0.14,0.28],[-0.011,0.14],[0.14,-0.14],[0.215,-0.29],[0.28,-0.505],[0.355,-0.817],[0.42,-1.5],[0.38,-2.6],[0.2,-4.2],[0,-5.6]];
+const railCurve=new THREE.CatmullRomCurve3(RAILKM.map(p=>{const q=W(...p);return new THREE.Vector3(q[0],0,q[1]);}),false,'centripetal');
+const RAIL_L=railCurve.getLength();
+const railPts=railCurve.getSpacedPoints(Math.ceil(RAIL_L/2)).map(p=>[p.x,p.z]);
+const railBB=bbox(railPts);
+const railInfo=(x,z)=>polyInfo(x,z,railPts);
+const railDist=(x,z)=>(x<railBB[0]-30||x>railBB[1]+30)?99:railInfo(x,z)[0];
+const railX=y=>xAt(RAILKM,y);
+function railNear(x,z){let best=1e9,bi=0;for(let i=0;i<railPts.length;i++){const d=Math.hypot(railPts[i][0]-x,railPts[i][1]-z);if(d<best){best=d;bi=i;}}const u=bi/(railPts.length-1);return{u,s:u*RAIL_L,p:railCurve.getPointAt(u),t:railCurve.getTangentAt(u)};}
+
+// ---------- roads (km), traced from the map ----------
+const ROADS=[
+ {id:'z5002',w:1.25,k:'main',pts:[[-6.5,0.5],[-5.2,0.3],[-4,0.16],[-3,0.1],[-2.3,0.05],[-1.7,-0.02],[-1.258,-0.086],[-0.828,-0.194],[-0.688,-0.355],[-0.613,-0.366],[-0.441,-0.323],[-0.269,-0.366],[-0.114,-0.452]]},
+ {id:'town',w:1.35,k:'main',pts:[[-0.114,-0.452],[0.032,-0.366],[0.161,-0.28],[0.215,-0.258],[0.312,-0.323],[0.409,-0.419],[0.484,-0.467],[0.677,-0.473],[0.892,-0.456],[1.107,-0.505],[1.322,-0.548],[1.563,-0.608],[2.3,-0.7],[3.4,-0.76],[4.8,-0.9],[6.5,-1]]},
+ {id:'z5055',w:1.1,k:'main',pts:[[-0.114,-0.452],[-0.29,-0.656],[-0.398,-0.817],[-0.6,-1.3],[-0.82,-2.1],[-1.05,-3.3],[-1.3,-5]]},
+ {id:'mill',w:.6,k:'minor',pts:[[-0.118,3.55],[-0.118,2.6],[-0.118,1.95],[-0.118,1.2],[-0.118,0.742],[-0.121,0.45],[-0.123,0.204],[-0.15,0.032],[-0.172,-0.118],[-0.204,-0.269],[-0.262,-0.362]]},
+ {id:'rest',w:.55,k:'minor',pts:[[-1.3,0.196],[-1.258,0.194],[-1,0.186],[-0.753,0.178],[-0.45,0.172],[-0.129,0.166]]},
+ {id:'afzal',w:.45,k:'minor',pts:[[-0.753,0.178],[-0.765,0],[-0.79,-0.17]]},
+ {id:'jamil',w:.5,k:'minor',pts:[[0.87,0.72],[0.871,0.234],[0.875,-0.1],[0.86,-0.45]]},
+ {id:'ne',w:.5,k:'minor',pts:[[0.22,-0.255],[0.269,-0.15],[0.441,0.118],[0.56,0.24]]},
+ {id:'stn',w:.55,k:'minor',pts:[[0.312,-0.323],[0.338,-0.45],[0.345,-0.6],[0.36,-0.82],[0.39,-1.05]]},
+ {id:'g1',w:.4,k:'minor',lin:1,pts:[[0.17,-0.17],[0.17,-0.02]]},{id:'g2',w:.4,k:'minor',lin:1,pts:[[0.24,-0.26],[0.24,-0.02]]},
+ {id:'g3',w:.4,k:'minor',lin:1,pts:[[0.38,-0.36],[0.38,0]]},{id:'g4',w:.4,k:'minor',lin:1,pts:[[0.12,-0.06],[0.45,-0.06]]},
+ {id:'g5',w:.4,k:'minor',lin:1,pts:[[0.16,-0.14],[0.45,-0.14]]},{id:'g6',w:.4,k:'minor',lin:1,pts:[[-0.19,-0.55],[0.26,-0.55]]},
+ {id:'g7',w:.4,k:'minor',lin:1,pts:[[-0.31,-0.7],[0.3,-0.7]]},{id:'g8',w:.4,k:'minor',lin:1,pts:[[-0.03,-0.42],[-0.03,-0.86]]},
+ {id:'g9',w:.4,k:'minor',lin:1,pts:[[0.13,-0.31],[0.13,-0.86]]},{id:'g10',w:.45,k:'minor',lin:1,pts:[[0.774,-0.47],[0.774,-0.86]]},
+ {id:'g11',w:.4,k:'minor',lin:1,pts:[[0.42,-0.62],[0.92,-0.62]]},{id:'g12',w:.4,k:'minor',lin:1,pts:[[0.56,-0.47],[0.56,-0.86]]},
+ // estate tracks
+ {id:'t1',w:.55,k:'track',lin:1,pts:[[-1.3,0.72],[0.9,0.72]]},{id:'t2',w:.55,k:'track',lin:1,pts:[[-2.5,1.95],[0.9,1.95]]},
+ {id:'t3',w:.5,k:'track',lin:1,pts:[[-1.3,0.2],[-1.3,1.95]]},{id:'t4',w:.5,k:'track',lin:1,pts:[[-2.5,0.1],[-2.5,3.55],[0.9,3.55],[0.9,0.72]]},
+ {id:'t5',w:.5,k:'track',lin:1,pts:[[-0.4,1.95],[-0.4,3.55]]},{id:'t6',w:.5,k:'track',lin:1,pts:[[-0.85,0.19],[-0.85,0.44]]},
+ {id:'t7',w:.5,k:'track',lin:1,pts:[[-1.28,0.44],[-0.52,0.44]]},{id:'t8',w:.5,k:'track',lin:1,pts:[[-2.5,1.0],[-1.3,1.0]]},
+];
+ROADS.forEach(r=>{r.wp=r.lin?linPts(r.pts):smoothPts(r.pts,1.4);r.bb=bbox(r.wp);});
+function roadInfo(x,z){let m=1e9,ang=0;for(const r of ROADS){const b=r.bb;if(x<b[0]-6||x>b[1]+6||z<b[2]-6||z>b[3]+6)continue;const[d,a]=polyInfo(x,z,r.wp);if(d-r.w/2<m){m=d-r.w/2;ang=a;}}return[m,ang];}
+const roadDist=(x,z)=>roadInfo(x,z)[0];
+const RD=id=>ROADS.find(r=>r.id===id);
+ROADS.forEach(r=>{
+  if(r.k==='main'){ribbon(r.wp,r.w+.7,.17,shoulderMat);ribbon(r.wp,r.w,.2,tarMain,null,r.w*3.2);}
+  else if(r.k==='minor')ribbon(r.wp,r.w,.19,tarMinor);
+  else ribbon(r.wp,r.w,.165,dirtMat);});
+
+// ---------- river Suk ----------
+const RIVERKM=[[1.5,5.5],[1.38,4.2],[1.35,3.3],[1.42,2.2],[1.3,1.2],[1.15,0.4],[0.98,-0.1],[0.9,-0.456],[0.967,-0.645],[1.043,-0.666],[1.075,-0.71],[1.107,-0.817],[1.15,-1.5],[1.05,-2.6],[1.2,-4],[1.1,-5.5]];
+const riverPts=smoothPts(RIVERKM,2);const riverBB=bbox(riverPts);
+ribbon(riverPts,7.5,.03,mat(0x93a86e,{roughness:1}));ribbon(riverPts,5,.05,bankMat);ribbon(riverPts,3.2,.08,water);
+const riverDist=(x,z)=>(x<riverBB[0]-20||x>riverBB[1]+20)?99:polyInfo(x,z,riverPts)[0];
+// bridge on the town road
+{const b=W(0.9,-0.457),[,ang]=polyInfo(b[0],b[1],RD('town').wp);const g=new THREE.Group();g.position.set(b[0],0,b[1]);g.rotation.y=-ang;scene.add(g);
+ box(6,.14,1.7,mat(0xb9b4a8),0,.12,0,g);[-0.82,0.82].forEach(z=>{box(6,.12,.07,mat(0xe8e4da),0,.26,z,g);for(let i=-3;i<=3;i++)box(.07,.14,.09,mat(0xe8e4da),i*.95,.24,z,g);});}
+
+// ---------- railway build ----------
+ribbon(railPts,4.2,.135,grassMat);
+ribbon(railPts,1.4,.22,mat(0x8f8676,{roughness:1}));
+ribbon(railPts,.6,.27,mat(0x76706a,{roughness:1}));
+const railMetal=mat(0x5d6266,{metalness:.75,roughness:.35});
+ribbon(offsetPoly(railPts,.085),.028,.305,railMetal);ribbon(offsetPoly(railPts,-.085),.028,.305,railMetal);
+{const sl=[];const n=Math.floor(RAIL_L/.26);for(let i=0;i<n;i++){const u=i/n;const p=railCurve.getPointAt(u),t=railCurve.getTangentAt(u);sl.push([p.x,p.z,-Math.atan2(t.z,t.x)]);}
+ const im=new THREE.InstancedMesh(new THREE.BoxGeometry(.06,.025,.27),mat(0x6a5a48),sl.length);
+ sl.forEach((s,i)=>{E.set(0,s[2],0);Q.setFromEuler(E);M.compose(V.set(s[0],.29,s[1]),Q,ONE);im.setMatrixAt(i,M);});im.receiveShadow=true;scene.add(im);}
+function frameAt(s){const u=Math.max(0,Math.min(1,s/RAIL_L));return{p:railCurve.getPointAt(u),t:railCurve.getTangentAt(u)};}
+function railGroup(s,par){const f=frameAt(s);const g=new THREE.Group();g.position.set(f.p.x,0,f.p.z);g.rotation.y=-Math.atan2(f.t.z,f.t.x);(par||scene).add(g);return g;}
+// level crossings: mill road and town junction
+[[-0.12,0.25],[0.205,-0.262]].forEach(k=>{const q=W(...k),n=railNear(q[0],q[1]);const g=railGroup(n.s);
+  box(1.8,.04,1.5,mat(0x5a5a56),0,.29,0,g);
+  [[-1.1,-.95],[1.1,.95]].forEach(([x,z])=>{box(.07,.5,.07,mat(0xf2f2ee),x,.2,z,g);const arm=box(.04,.04,1.4,mat(0xd23a2a),x,.62,z-Math.sign(z)*.7,g);arm.castShadow=false;});});
+
+// ---------- Thakurgaon Road station (east side of the track) ----------
+const STN=railNear(...W(0.3,-0.57));
+const stG=railGroup(STN.s);
+{const plat=mat(0xc9c1b0),cream=mat(0xefe3c4),maroon=mat(0x8a2f2a),roofM=mat(0x8b9aa3,{metalness:.4,roughness:.5});
+ box(18,.2,.6,plat,0,.12,-.62,stG);box(18,.2,.55,plat,0,.12,.6,stG);
+ box(3.2,.42,.95,cream,0,.32,-1.45,stG);box(3.3,.05,1.05,maroon,0,.74,-1.45,stG);{const r=new THREE.Mesh(prismGeo(),mat(0x9b3a2e,{side:THREE.DoubleSide}));r.scale.set(3.4,.32,1.15);r.position.set(0,.79,-1.45);r.castShadow=true;stG.add(r);}box(.9,.3,.96,maroon,0,.32,-1.46,stG);
+ for(let i=-1;i<=1;i++)box(.3,.04,.02,maroon,i*.9,.55,-.965,stG);
+ box(9,.03,.62,roofM,0,.66,-.62,stG);for(let i=-4;i<=4;i++)box(.04,.34,.04,mat(0x6d6d68),i*1.05,.32,-.4,stG);
+ const signTex=canvasTex(512,96,(g,w,h)=>{g.fillStyle='#f4c430';g.fillRect(0,0,w,h);g.strokeStyle='#1d1d1b';g.lineWidth=6;g.strokeRect(3,3,w-6,h-6);g.fillStyle='#1d1d1b';g.font='bold 54px Arial,Helvetica,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('THAKURGAON ROAD',w/2,h/2+2);});
+ [-7.5,7.5].forEach(x=>{const s=new THREE.Mesh(new THREE.PlaneGeometry(1.4,.26),new THREE.MeshStandardMaterial({map:signTex,side:THREE.DoubleSide,roughness:.7}));s.position.set(x,.62,-.85);s.rotation.y=Math.PI;stG.add(s);box(.03,.48,.03,mat(0x333333),x-.6,.24,-.85,stG);box(.03,.48,.03,mat(0x333333),x+.6,.24,-.85,stG);});
+ // loop line on the west side
+ [.47,.63].forEach(z=>box(20,.02,.026,railMetal,0,.29,z+.45,stG));
+ box(22,.05,.8,mat(0x76706a),0,.24,.99,stG);
+ // forecourt
+ box(6,.04,2,mat(0xb7ad98),0,.17,-2.9,stG);}
+
+// ---------- estate grounds ----------
+const swapParcels=[];
+function parcels(r,size,liveTexs,idleTex,pilotFn,store){
+  const nx=Math.max(1,Math.round(r.w/size)),nz=Math.max(1,Math.round(r.d/size)),pw=r.w/nx,pd=r.d/nz;
+  for(let i=0;i<nx;i++)for(let j=0;j<nz;j++){const cx=r.x0+pw*(i+.5),cz=r.z0+pd*(j+.5);
+    const lt=liveTexs[(rnd()*liveTexs.length)|0].clone();lt.needsUpdate=true;lt.repeat.set(pw/6,pd/6);
+    const it=idleTex.clone();it.needsUpdate=true;it.repeat.set(pw/6,pd/6);
+    const live=mat(0xffffff,{map:lt}),idle=mat(0xffffff,{map:it});
+    const m=new THREE.Mesh(new THREE.BoxGeometry(pw-1.1,.12,pd-1.1),live);m.position.set(cx,.06,cz);m.receiveShadow=true;scene.add(m);
+    const o={m,live,idle,pilot:pilotFn?pilotFn(cx,cz):false,cx,cz,pw,pd};swapParcels.push(o);if(store)store.push(o);}}
+const salParcels=[],fodParcels=[];
+parcels(SAL,20,cropTex,fallowTex,(x,z)=>x>SAL.x1-45&&z>SAL.z1-45,salParcels);
+parcels(FOD,24,fodTex,grassTex,null,fodParcels);
+function agriGround(r){const t=canvasTex(64,64,(g,w,h)=>{g.fillStyle='#86ad57';g.fillRect(0,0,w,h);g.fillStyle='#5f8f3e';g.fillRect(0,0,w,h*.42);for(let k=0;k<60;k++){g.fillStyle='rgba(40,70,25,.15)';g.fillRect(rnd()*w,rnd()*h,2,1);}});
+  t.repeat.set(r.w/6,r.d/1.6);const m=new THREE.Mesh(new THREE.BoxGeometry(r.w-1.2,.12,r.d-1.2),mat(0xffffff,{map:t}));m.position.set(r.x,.06,r.z);m.receiveShadow=true;scene.add(m);}
+agriGround(AGW);agriGround(AGN);
+function pad(r,c,parent){const m=new THREE.Mesh(new THREE.BoxGeometry(r.w-.6,.1,r.d-.6),mat(c));m.position.set(r.x,.15,r.z);m.receiveShadow=true;(parent||scene).add(m);return m;}
+{const g=new THREE.Mesh(new THREE.BoxGeometry(HUB.w-.6,.12,HUB.d-.6),mat(0xffffff,{map:(()=>{const t=grassTex.clone();t.needsUpdate=true;t.repeat.set(HUB.w/6,HUB.d/6);return t;})()}));g.position.set(HUB.x,.07,HUB.z);g.receiveShadow=true;scene.add(g);
+ const yard=(x0,z0,x1,z1,c)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,.08,z1-z0),mat(c||0x9f9683));m.position.set((x0+x1)/2,.16,(z0+z1)/2);m.receiveShadow=true;scene.add(m);};
+ yard(-45,75,-27,101);yard(-25,74.5,24,89);yard(-17,104,8.5,113);yard(-43.5,104.6,-32.5,115,0x8e7f66);yard(17,106,23,110);yard(-6,113,-4,121,0xa7a092);}
+// estate boundary (dashed)
+{const b=[[-2.5,0.1],[-1.3,0.1],[-1.3,0.2],[-0.42,0.2],[-0.42,0.72],[0.9,0.72],[0.9,3.55],[-2.5,3.55],[-2.5,0.1]].map(p=>{const q=W(...p);return new THREE.Vector3(q[0],.55,q[1]);});
+ const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(b),new THREE.LineDashedMaterial({color:0xb87a0c,dashSize:4,gapSize:2.5}));l.computeLineDistances();scene.add(l);}
+
+// ---------- Salandar drainage canals with LGED (phase 1) ----------
+function canal(km,w,parent){const p=linPts(km);ribbon(p,w+1.3,.135,bankMat,parent);ribbon(p,w,.15,water,parent);}
+canal([[-2.48,1.97],[-2.48,3.57],[1.33,3.57]],1.8,P[1]);
+canal([[-2.48,2.5],[-0.42,2.5]],1.1,P[1]);canal([[-2.48,3.05],[-0.42,3.05]],1.1,P[1]);
+canal([[-1.85,1.97],[-1.85,3.57]],1.1,P[1]);canal([[-0.62,1.97],[-0.62,3.57]],1.1,P[1]);
+
+// ---------- Aman's Tea Garden (private, outside the estate) ----------
+const TEAKM=[[-0.054,0.7],[0.849,0.7],[0.892,0.312],[0.548,0.247],[0.204,0.108],[-0.054,0.333]];
+{const t=canvasTex(128,128,(g,w,h)=>{g.fillStyle='#6f8a45';g.fillRect(0,0,w,h);for(let y=0;y<h;y+=8){g.fillStyle='#41682f';g.fillRect(0,y,w,5.2);for(let x=0;x<w;x+=3){g.fillStyle='rgba(120,170,70,.35)';g.fillRect(x+rnd()*2,y+rnd()*4,1.5,1.5);}}});t.repeat.set(1/3,1/3);
+ polyGround(linPts(TEAKM),mat(0xffffff,{map:t}),.1);}
+const inPoly=(x,z,poly)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>z)!==(b[1]>z)&&x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;};
+const TEAW=linPts(TEAKM);
+
+// ---------- AGRIVOLTAIC ARRAYS: raised 5 m frames, crops below ----------
+const panelMat=mat(0x1b3550,{roughness:.28,metalness:.55}),postMat=mat(0x9aa3a8,{metalness:.6,roughness:.4});
+const spots={1:[],2:[],3:[]},rowsAt=[];
+function arrays(r){const pitch=1.6,seg=8,m=2.6;let row=0;
+  for(let z=r.z0+m;z<r.z1-m;z+=pitch,row++){if(row%12===11)continue;
+    for(let x=r.x0+m,c=0;x<r.x1-m-seg*.5;x+=seg,c++){if(c%7===6)continue;const cx=x+seg/2;
+      if(inR(SUB,cx,z,3)||railDist(cx,z)<6.5||roadDist(cx,z)<4.2)continue;
+      const ph=inR(PILOT,cx,z)?1:inR(BLK5,cx,z)?2:3;spots[ph].push([cx,z]);}}}
+arrays(AGW);arrays(AGN);
+const panelG=new THREE.BoxGeometry(7.2,.04,.55),postG=new THREE.CylinderGeometry(.035,.035,.5,5);
+[1,2,3].forEach(ph=>{const arr=spots[ph];if(!arr.length)return;
+  const pm=new THREE.InstancedMesh(panelG,panelMat,arr.length),po=new THREE.InstancedMesh(postG,postMat,arr.length*4);
+  arr.forEach((p,i)=>{E.set(.4,0,0);Q.setFromEuler(E);M.compose(V.set(p[0],.52,p[1]),Q,ONE);pm.setMatrixAt(i,M);Q.identity();
+    [-3.2,-1.1,1.1,3.2].forEach((dx,k)=>{M.compose(V.set(p[0]+dx,.25+.12,p[1]),Q,ONE);po.setMatrixAt(i*4+k,M);});});
+  pm.castShadow=true;pm.receiveShadow=true;P[ph].add(pm,po);});
+for(let x=AGW.x0+14;x<AGN.x1-10;x+=28)for(let z=AGN.z0+12;z<AGW.z1-8;z+=26){if(!(inR(AGW,x,z,-4)||inR(AGN,x,z,-4))||inR(SUB,x,z,6)||railDist(x,z)<6||roadDist(x,z)<2)continue;box(.5,.3,.3,mat(0xeef1ee),x,.12,z,P[inR(BLK5,x,z)||inR(PILOT,x,z)?2:3]);}
+
+// ---------- 132 kV substation and line east (phase 3) ----------
+const p3=P[3];
+{const sp=new THREE.Mesh(new THREE.BoxGeometry(SUB.w-2,.12,SUB.d-2),mat(0xb3ada0));sp.position.set(SUB.x,.14,SUB.z);sp.receiveShadow=true;p3.add(sp);
+ for(let i=0;i<3;i++){box(1.4,1.1,1,mat(0x6e7b72,{metalness:.3}),SUB.x-5+i*4,.2,SUB.z+3,p3);box(.35,.6,.35,mat(0xc9ccc4),SUB.x-5+i*4,1.3,SUB.z+3,p3);}
+ for(let i=0;i<5;i++)box(.14,2.6,.14,postMat,SUB.x-8+i*4,.2,SUB.z-4,p3);box(16.5,.14,.14,postMat,SUB.x,2.7,SUB.z-4,p3);
+ for(let i=0;i<4;i++)for(let j=0;j<3;j++)box(.2,1.2,.2,mat(0xc9ccc4),SUB.x-6+i*3.5,.2,SUB.z-1+j*1.2,p3);
+ box(3,1,2,mat(0xe9e4d8),SUB.x+7.5,.2,SUB.z+4,p3);}
+function lineOf(km,parent,h,scale){const tl=km.map(p=>W(...p));const tops=[];
+  for(let i=1;i<tl.length;i++){const a=tl[i-1],b=tl[i];const rot=-Math.atan2(b[1]-a[1],b[0]-a[0]);tops.push([b[0],b[1],rot]);
+    const g=new THREE.Group();g.position.set(b[0],0,b[1]);g.rotation.y=rot;g.scale.setScalar(scale);
+    const bm=new THREE.Mesh(new THREE.CylinderGeometry(.12,.7,h,4,1,true),new THREE.MeshStandardMaterial({color:0x8c959a,wireframe:true}));bm.position.y=h/2;g.add(bm);
+    [h*.72,h*.9].forEach((y,k)=>{const a2=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,k?2.4:3.4),postMat);a2.position.y=y;g.add(a2);});parent.add(g);}
+  const wire=new THREE.LineBasicMaterial({color:0x3c4448,transparent:true,opacity:.7});const all=[[tl[0][0],tl[0][1],0]].concat(tops);
+  [-1.7,0,1.7].forEach(off=>{for(let i=1;i<all.length;i++){const a=all[i-1],b=all[i],pts=[],ha=(i===1?h*.5:h*.72)*scale,hb=h*.72*scale;
+    for(let k=0;k<=12;k++){const t=k/12;pts.push(new THREE.Vector3(a[0]+(b[0]-a[0])*t+Math.sin(b[2])*off*scale,ha+(hb-ha)*t-Math.sin(Math.PI*t)*1.2,a[1]+(b[1]-a[1])*t+Math.cos(b[2])*off*scale));}
+    parent.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),wire));}});}
+lineOf([[0.44,0.87],[0.95,0.86],[1.55,0.82],[2.25,0.68],[3.0,0.42],[3.8,0.12],[4.6,-0.2],[5.5,-0.5]],p3,6,1);
+
+// ---------- PHASE 4: 400 MW ground-mount on adjacent land ----------
+const p4=P[4];
+{const t=stripeTex('#a7bb78','#97ac69',12,200);t.repeat.set(P4R.w/8,P4R.d/8);const g=new THREE.Mesh(new THREE.BoxGeometry(P4R.w,.1,P4R.d),mat(0xffffff,{map:t}));g.position.set(P4R.x,.07,P4R.z);g.receiveShadow=true;p4.add(g);
+ const b=[[-4.7,0.25],[-2.6,0.25],[-2.6,2.45],[-4.7,2.45],[-4.7,0.25]].map(p=>{const q=W(...p);return new THREE.Vector3(q[0],.5,q[1]);});
+ const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(b),new THREE.LineDashedMaterial({color:0x2d5c8f,dashSize:4,gapSize:2.5}));l.computeLineDistances();p4.add(l);
+ [[[-4.7,1.35],[-2.6,1.35]],[[-3.65,0.25],[-3.65,2.45]],[[-4.7,0.25],[-2.6,0.25],[-2.6,2.45],[-4.7,2.45],[-4.7,0.25]]].forEach(k=>ribbon(linPts(k),.6,.16,dirtMat,p4));}
+const P4SUB=rect(-2.95,1.2,-2.66,1.5);
+const spots4=[];
+for(let z=P4R.z0+2;z<P4R.z1-2;z+=1.02)for(let x=P4R.x0+2,c=0;x<P4R.x1-6;x+=8.2,c++){const cx=x+4;
+  if(Math.abs(cx-W(-3.65,0)[0])<2.5||Math.abs(z-W(0,1.35)[1])<1.6||inR(P4SUB,cx,z,3))continue;spots4.push([cx,z]);}
+{const pm=new THREE.InstancedMesh(new THREE.BoxGeometry(7.8,.03,.44),mat(0x203d5c,{roughness:.25,metalness:.6}),spots4.length);
+ const po=new THREE.InstancedMesh(new THREE.BoxGeometry(.05,.14,.05),postMat,spots4.length*2);
+ spots4.forEach((p,i)=>{E.set(.42,0,0);Q.setFromEuler(E);M.compose(V.set(p[0],.22,p[1]),Q,ONE);pm.setMatrixAt(i,M);Q.identity();M.compose(V.set(p[0]-3.4,.17,p[1]),Q,ONE);po.setMatrixAt(i*2,M);M.compose(V.set(p[0]+3.4,.17,p[1]),Q,ONE);po.setMatrixAt(i*2+1,M);});
+ pm.castShadow=true;pm.receiveShadow=true;p4.add(pm,po);
+ for(let x=P4R.x0+12;x<P4R.x1-8;x+=24)for(let z=P4R.z0+10;z<P4R.z1-8;z+=22)if(!inR(P4SUB,x,z,4))box(.6,.32,.35,mat(0xeef1ee),x,.12,z,p4);
+ const sp=new THREE.Mesh(new THREE.BoxGeometry(P4SUB.w,.12,P4SUB.d),mat(0xb3ada0));sp.position.set(P4SUB.x,.14,P4SUB.z);p4.add(sp);
+ for(let i=0;i<4;i++){box(1.8,1.4,1.3,mat(0x5d6b64,{metalness:.3}),P4SUB.x-9+i*5,.2,P4SUB.z+4,p4);box(.4,.8,.4,mat(0xc9ccc4),P4SUB.x-9+i*5,1.6,P4SUB.z+4,p4);}
+ for(let i=0;i<6;i++)box(.16,3.2,.16,postMat,P4SUB.x-11+i*4.6,.2,P4SUB.z-5,p4);box(24,.16,.16,postMat,P4SUB.x-.5,3.3,P4SUB.z-5,p4);}
+lineOf([[-2.8,1.35],[-2.75,0.6],[-2.95,-0.4],[-3.2,-1.4],[-3.4,-2.5],[-3.6,-3.6],[-3.8,-4.8]],p4,8,1.25);
+
+// ---------- MILL COMPOUND: existing buildings west of the railway, rooftop solar in phase 1 ----------
+const brick=mat(0x9a4f37),concrete=mat(0xd9d4c8),tin=mat(0x9aa5ab,{metalness:.5,roughness:.45}),white=mat(0xf1f1ec),teal=mat(0x2f6b67);
+const roofSolar=mat(0x1b3550,{roughness:.28,metalness:.55});
+const MILLN=railNear(...W(0,0.03));
+const millG=railGroup(MILLN.s);const p0=P[0];
+const L2W=(lx,lz)=>{const v=new THREE.Vector3(lx,0,lz).applyAxisAngle(YA,millG.rotation.y);return[millG.position.x+v.x,millG.position.z+v.z];};
+{polyGround([[-16,1.3],[16,1.3],[16,24],[-16,7.6]],mat(0xb8b09e),.14,millG);
+ box(32,.02,.026,railMetal,0,.27,1.45,millG);box(32,.02,.026,railMetal,0,.27,1.62,millG);
+ // cane yard and carrier
+ box(7,.04,3.2,mat(0x8f7d5c),-11.5,.15,4,millG);for(let i=0;i<9;i++)box(R(.6,1.1),R(.12,.25),R(.4,.7),mat(0x7d8a4a),-14.5+i*.8,.16,R(3,5),millG);
+ box(5.5,.08,.4,mat(0x6b5a4a),-6.8,.9,4.4,millG);for(let i=0;i<3;i++)box(.1,.9,.1,postMat,-9+i*2.2,.15,4.4,millG);
+ // crushing house, boiling house, chimney
+ box(9,2.2,4,brick,-1.5,.15,5,millG);box(9.3,.2,4.3,tin,-1.5,2.35,5,millG);
+ box(5.5,2.8,4,brick,6.3,.15,5,millG);box(5.8,.2,4.3,tin,6.3,2.95,5,millG);
+ for(let i=0;i<6;i++)box(.4,.5,.02,mat(0x3a2a22),-5+i*1.4,1.3,2.99,millG);
+ const ch=cyl(.42,6.2,brick,-3,.15,9.5,millG);ch.geometry=new THREE.CylinderGeometry(.32,.5,6.2,14);cyl(.38,.3,mat(0x3a2a22),-3,6.3,9.5,millG);
+ // godowns with rooftop solar (phase 1)
+ [[-2,12.2,7],[7,13,7],[13.5,17,5]].forEach(([x,z,l])=>{box(l,1.2,2.4,concrete,x,.15,z,millG);box(l+.2,.12,2.6,tin,x,1.35,z,millG);});
+ box(3.5,.9,2,mat(0xece6d8),12,.15,9,millG);
+ cyl(.85,1.4,mat(0x6f6a5f,{metalness:.3}),12.4,.15,4.2,millG);cyl(.85,1.4,mat(0x6f6a5f,{metalness:.3}),14.4,.15,4.2,millG);}
+// rooftop solar and battery containers live in phase 1 (sub-group aligned with the mill)
+const millP1=new THREE.Group();millP1.position.copy(millG.position);millP1.rotation.copy(millG.rotation);P[1].add(millP1);
+[[-2,12.2,7],[7,13,7],[13.5,17,5]].forEach(([x,z,l])=>box(l-.3,.03,2.2,roofSolar,x,1.49,z,millP1));
+box(8.6,.04,3.8,roofSolar,-1.5,2.56,5,millP1);box(5.2,.04,3.8,roofSolar,6.3,3.16,5,millP1);box(3.2,.04,1.8,roofSolar,12,1.07,9,millP1);
+for(let i=0;i<4;i++)box(1.2,.5,.5,white,-14.2+i*1.4,.15,7.8,millP1);
+const MILLC=L2W(0,8);
+
+// ---------- colony, mosque, playground, rest house ----------
+const quarterSpots=[];
+{const m=W(-0.146,0.43),mos=new THREE.Group();mos.position.set(m[0],0,m[1]);scene.add(mos);
+ box(2.4,.03,1.8,mat(0xd8d2c2),0,.14,0,mos);box(1.3,.45,1.1,white,0,.15,0,mos);
+ const dome=new THREE.Mesh(new THREE.SphereGeometry(.34,18,10,0,Math.PI*2,0,Math.PI/2),mat(0xeef3ee));dome.position.set(0,.6,0);dome.castShadow=true;mos.add(dome);
+ const fin=new THREE.Mesh(new THREE.ConeGeometry(.04,.16,8),mat(0xc9a24a));fin.position.set(0,1.0,0);mos.add(fin);
+ cyl(.07,1.25,white,.75,.15,-.6,mos,10);const mt=new THREE.Mesh(new THREE.ConeGeometry(.09,.25,10),mat(0x2f7d4a));mt.position.set(.75,1.52,-.6);mos.add(mt);
+ const p=W(-0.2,0.6),pl=canvasTex(256,160,(g,w,h)=>{g.fillStyle='#7fae55';g.fillRect(0,0,w,h);for(let i=0;i<8;i++){g.fillStyle=i%2?'rgba(255,255,255,.06)':'rgba(0,0,0,.04)';g.fillRect(i*w/8,0,w/8,h);}g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=3;g.strokeRect(8,8,w-16,h-16);g.beginPath();g.moveTo(w/2,8);g.lineTo(w/2,h-8);g.stroke();g.beginPath();g.arc(w/2,h/2,18,0,6.3);g.stroke();});
+ const f=new THREE.Mesh(new THREE.BoxGeometry(3.2,.03,2),mat(0xffffff,{map:pl}));f.position.set(p[0],.13,p[1]);f.receiveShadow=true;scene.add(f);
+ [-1.5,1.5].forEach(x=>{box(.02,.12,.4,white,p[0]+x,.15,p[1],null);});
+ const r=W(-0.1,0.19);box(2.6,.02,2,mat(0x8fb35e),r[0]-.4,.13,r[1],null);box(1.4,.34,.9,mat(0xf0e6cc),r[0]-.4,.15,r[1],null);
+ const rf=new THREE.Mesh(prismGeo(),mat(0x9b4a33,{side:THREE.DoubleSide}));rf.scale.set(1.55,.28,1.05);rf.position.set(r[0]-.4,.49,r[1]);rf.castShadow=true;scene.add(rf);}
+function prismGeo(){const A=[-.5,0,-.5],B=[-.5,0,.5],C=[-.5,1,0],D=[.5,0,-.5],F=[.5,0,.5],G=[.5,1,0];
+  const t=[A,C,B,D,F,G,A,D,G,A,G,C,B,C,G,B,G,F,A,B,F,A,F,D];const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(t.flat(),3));g.computeVertexNormals();return g;}
+
+// ---------- LIVESTOCK, MILK, MOZZARELLA AND GREEN COLD STORAGE HUB ----------
+const H=HUB;
+function barn(x,z,ph){const g=P[ph];box(16,.28,3.2,mat(0xece6d8),x,.2,z,g);for(let i=-4;i<=4;i++)box(.08,.32,.08,postMat,x+i*1.9,.2,z+1.55,g);
+  const r=new THREE.Mesh(prismGeo(),mat(0x6f8790,{metalness:.4,roughness:.5,side:THREE.DoubleSide}));r.scale.set(16.6,.42,3.7);r.position.set(x,.5,z);r.castShadow=true;g.add(r);
+  const s=new THREE.Mesh(new THREE.BoxGeometry(15.6,.03,1.6),roofSolar);s.position.set(x,.73,z+.92);s.rotation.x=.23;g.add(s);}
+barn(-36,78,1);barn(-36,82.5,2);barn(-36,87,2);barn(-36,91.5,2);
+{const f=P[2];for(let i=0;i<9;i++)box(.05,.16,.05,postMat,-44+i*2,.2,94.3,f);for(let i=0;i<9;i++)box(.05,.16,.05,postMat,-44+i*2,.2,99.5,f);box(16,.03,.03,postMat,-36,.33,94.3,f);box(16,.03,.03,postMat,-36,.33,99.5,f);}
+// milk testing and chilling (phase 1)
+box(3,.45,2.2,white,-22,.2,78,P[1]);box(2.8,.03,2,roofSolar,-22,.66,78,P[1]);cyl(.35,1,mat(0xe8ecec,{metalness:.55,roughness:.3}),-19.7,.2,77.4,P[1]);cyl(.35,1,mat(0xe8ecec,{metalness:.55,roughness:.3}),-19.7,.2,78.8,P[1]);
+// halal mozzarella plant (phase 2)
+box(8,.55,4.5,white,-9,.2,79,P[2]);box(7.6,.03,4.1,roofSolar,-9,.76,79,P[2]);box(8.05,.08,.1,mat(0x2f7d4a),-9,.5,81.27,P[2]);
+box(1.6,.85,1.3,teal,-14.2,.2,82.2,P[2]);cyl(.12,1.4,mat(0xb0b4b0),-14.6,.2,82.6,P[2],8);
+for(let i=0;i<3;i++)box(.6,.32,.3,mat(0xf4f4f0),-11+i*.9,.2,82.3,P[2]);
+// grading line and seed cold store (phase 2)
+box(6,.6,3.4,white,4,.2,77.5,P[2]);box(6,.6,3.4,white,4,.2,82,P[2]);box(5.7,.03,3.1,roofSolar,4,.81,77.5,P[2]);box(5.7,.03,3.1,roofSolar,4,.81,82,P[2]);
+// feed and rations (phase 2)
+for(let i=0;i<4;i++){cyl(.55,1.5,mat(0xd5dadb,{metalness:.55,roughness:.35}),16.5,.2,76.5+i*1.35,P[2],18);const c=new THREE.Mesh(new THREE.ConeGeometry(.57,.35,18),mat(0xbfc5c6,{metalness:.55,roughness:.35}));c.position.set(16.5,1.88,76.5+i*1.35);P[2].add(c);}
+box(3,.75,3.2,mat(0xc9a24a),20.5,.2,79.5,P[2]);
+// GREEN MULTI-CROP COLD STORAGE, 2 x 500 t, solar-grid hybrid with thermal storage (phase 2)
+const COLD={x:-2.5,z:107.5};
+{const cs=P[2],wallG=mat(0xf3f5f0),band=mat(0x2f7d4a);
+ [[-6,107.5],[1,107.5]].forEach(([x,z])=>{box(5.5,1.05,3.4,wallG,x,.2,z,cs);box(5.55,.14,3.45,band,x,.75,z,cs);box(5.3,.04,3.2,roofSolar,x,1.27,z,cs);
+   for(let k=-1;k<=1;k++)box(.7,.55,.04,mat(0x8a9396,{metalness:.5}),x+k*1.6,.2,z+1.72,cs);});
+ cyl(.55,1.3,mat(0x2f6b67,{metalness:.3,roughness:.4}),5.6,.2,106.4,cs);cyl(.55,1.3,mat(0x2f6b67,{metalness:.3,roughness:.4}),5.6,.2,108.6,cs);
+ box(9,.04,1.4,mat(0xa7a092),-2.5,.2,110.1,cs);
+ box(5,.04,3,roofSolar,-13.5,.62,108,cs);for(let i=0;i<3;i++)for(let j=0;j<2;j++)box(.06,.42,.06,postMat,-15.6+i*2.1,.2,106.8+j*2.4,cs);
+ const sign=canvasTex(512,128,(g,w,h)=>{g.fillStyle='#2f7d4a';g.fillRect(0,0,w,h);g.fillStyle='#fff';g.font='bold 44px Arial,Helvetica,sans-serif';g.textAlign='center';g.fillText('GREEN COLD STORE',w/2,56);g.font='600 32px Arial,Helvetica,sans-serif';g.fillText('2 × 500 t · solar hybrid',w/2,104);});
+ const s=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshStandardMaterial({map:sign,roughness:.6}));s.position.set(-2.5,.75,112.6);cs.add(s);box(.05,.5,.05,postMat,-3.6,.2,112.58,cs);box(.05,.5,.05,postMat,-1.4,.2,112.58,cs);}
+// compost yard (phase 1)
+for(let i=0;i<5;i++){box(9,.08,1.1,mat(0x5a4330),-38,.2,106+i*2,P[1]);box(9.4,.03,1.4,mat(0x7d9a6e,{roughness:.6}),-38,.42,106+i*2,P[1]);for(let k=0;k<4;k++)box(.05,.22,.05,postMat,-42.5+k*3,.2,106.6+i*2,P[1]);}
+box(4,.5,2.5,mat(0xece6d8),20,.2,108,P[1]);
+
+// ---------- cows (phase 2 herd: fodder and barn yard) ----------
+const COWS=[];
+for(let i=0;i<220;i++){const yard=i<26;const x=yard?R(-43.5,-28.5):R(FOD.x0+4,FOD.x1-4),z=yard?R(94.8,99):R(FOD.z1-55,FOD.z1-4);
+  if(!yard&&railDist(x,z)<5)continue;COWS.push({x,z,h:R(0,6.28),yard,tx:x,tz:z,wait:R(0,8),cx:yard?-36:x,cz:yard?97:z,r:yard?6:12});}
+const cowBody=new THREE.InstancedMesh(new THREE.BoxGeometry(.24,.11,.085),mat(0xffffff),COWS.length);
+const cowHead=new THREE.InstancedMesh(new THREE.BoxGeometry(.07,.06,.055),mat(0xffffff),COWS.length);
+COWS.forEach((c,i)=>{col.set(rnd()<.55?0xf0ece4:(rnd()<.5?0x6a4a32:0x2b2522));cowBody.setColorAt(i,col);cowHead.setColorAt(i,col);});
+cowBody.castShadow=cowHead.castShadow=true;P[2].add(cowBody,cowHead);
+
+// ---------- tube-wells on the seed farm ----------
+for(let i=0;i<12;i++){const x=R(SAL.x0+10,SAL.x1-10),z=R(SAL.z0+10,SAL.z1-10);if(railDist(x,z)<5)continue;box(.6,.4,.6,mat(0xe8e2d2),x,.12,z,P[2]);box(.7,.06,.7,mat(0x2f6b47),x,.52,z,P[2]);}
+
+// ---------- settlements: town, villages, colony quarters ----------
+const OCC=new Set();const OC=.6;
+function occFree(x,z,r){const i0=Math.floor((x-r)/OC),i1=Math.floor((x+r)/OC),j0=Math.floor((z-r)/OC),j1=Math.floor((z+r)/OC);for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++)if(OCC.has(i*100003+j))return false;return true;}
+function occMark(x,z,r){const i0=Math.floor((x-r)/OC),i1=Math.floor((x+r)/OC),j0=Math.floor((z-r)/OC),j1=Math.floor((z+r)/OC);for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++)OCC.add(i*100003+j);}
+// reserve key sites
+[[W(-0.146,0.43),1.6],[W(-0.2,0.6),2],[W(-0.1,0.19),1.6],[[COLD.x,COLD.z],30]].forEach(([p,r])=>occMark(p[0],p[1],r));
+for(let lx=-16;lx<=16;lx+=1.5)for(let lz=0;lz<=18;lz+=1.5){const q=L2W(lx,lz);occMark(q[0],q[1],1);}
+for(let lx=-10;lx<=10;lx+=1.2)for(let lz=-4;lz<=1.5;lz+=1.2){const q=new THREE.Vector3(lx,0,lz).applyAxisAngle(YA,stG.rotation.y);occMark(stG.position.x+q.x,stG.position.z+q.z,.8);}
+const BLD=[];
+const TOWNC=['#e8dcc3','#d9cbb0','#f0e6d2','#c9d6d2','#e6c9b5','#d8d0e0','#f2efe6','#cfc0a3','#e3b9a5','#d6dccb','#efd9b4'];
+const VILW=['#c9b08a','#b98e6a','#d2c3a3','#a8a090','#c4a27e','#bfb59d'];
+const ROOFC=['#8f9aa0','#a3aaa9','#7d8a8f','#9b6a4f','#8a7f74','#a0a8ad'];
+function place(x,z,type){
+  const t=type==='town',q=type==='quarter';
+  const w=q?1.5:t?R(.8,1.6):R(.75,1.15),d=q?.55:t?R(.75,1.3):R(.5,.8),rr=Math.max(w,d)*.55+.12;
+  if(railDist(x,z)<2.4+rr||riverDist(x,z)<3.2+rr)return false;
+  const[rd,ang]=roadInfo(x,z);if(rd<rr+.15)return false;
+  if(inEstate(x,z,1)||inPoly(x,z,TEAW)||inR(SUB,x,z,2))return false;
+  if(!occFree(x,z,rr))return false;occMark(x,z,rr);
+  const floors=t?(rnd()<.35?1:rnd()<.55?2:rnd()<.6?3:4):1;
+  const rot=(t||q||rd<4)?-ang+(rnd()<.5?0:Math.PI/2)*(t?0:1):R(0,3.14);
+  BLD.push({x,z,w,d,floors,h:t?floors*.32:q?.32:.28,rot,c:t?pick(TOWNC):q?'#e7d9a8':pick(VILW),roof:t?null:(q?'#a5533a':pick(ROOFC)),tank:t&&rnd()<.55});return true;}
+function fill(km,n,type){const r=rect(...km);let k=0,tries=0;while(k<n&&tries<n*8){tries++;if(place(R(r.x0,r.x1),R(r.z0,r.z1),type))k++;}}
+// town ground (packed earth and paving) under the built-up areas
+const townGround=mat(0x9f9a84,{roughness:1});
+[[0.0,-0.42,0.37,-0.15],[0.13,-0.24,0.47,0.02],[-0.32,-0.85,0.3,-0.46],[0.36,-0.85,0.62,-0.5],[0.62,-0.86,0.92,-0.5],[1.15,-0.85,1.62,-0.5]].forEach(k=>{const r=rect(...k);const m=new THREE.Mesh(new THREE.BoxGeometry(r.w,.02,r.d),townGround);m.position.set(r.x,.1,r.z);m.receiveShadow=true;scene.add(m);});
+// town and named localities (km boxes from the map)
+fill([0.0,-0.42,0.37,-0.15],300,'town');           // bazar around the junction
+fill([0.13,-0.24,0.47,0.02],220,'town');           // streets east of the railway
+fill([-0.32,-0.85,0.3,-0.46],330,'town');          // south of the junction, west of the station
+fill([0.36,-0.85,0.62,-0.5],140,'town');           // east of the station
+fill([0.62,-0.86,0.92,-0.5],170,'town');           // Islam Nagar
+fill([1.15,-0.85,1.62,-0.5],120,'town');           // Munsirhat
+fill([0.45,-0.42,0.86,0.12],120,'village');
+fill([-0.34,-0.32,0.06,-0.1],120,'village');       // Hariharpur
+fill([-1.28,-0.06,-0.42,0.17],150,'village');      // along the rest house road
+fill([-0.95,-0.33,-0.3,-0.07],120,'village');
+fill([-1.3,-0.86,-0.4,-0.38],130,'village');
+fill([0.95,-0.4,1.7,0.2],70,'village');
+// colony quarters between the railway and the mill road
+for(let k=0,tries=0;k<70&&tries<900;tries++){const y=R(0.3,0.72),rx=railX(y);if(rx===null)continue;const x=R(rx+0.035,-0.135);if(x<=rx+0.03)continue;const q=W(x,y);if(place(q[0],q[1],'quarter')){k++;quarterSpots.push(q);}}
+for(let k=0,tries=0;k<16&&tries<300;tries++){const y=R(0.36,0.72),x=R(-0.105,-0.065);const q=W(x,y);if(place(q[0],q[1],'quarter'))k++;}
+// outer villages: homestead groves in a ring around the site
+const villages=[];
+for(let n=0,tries=0;n<56&&tries<3000;tries++){const x=R(-7,6.5),y=R(-5,6.2);
+  if(x>-4.9&&x<1.1&&y>-0.05&&y<3.75)continue;if(x>-0.45&&x<1.75&&y>-0.95&&y<0.8)continue;if(x>-1.45&&x<0.95&&y>-0.95&&y<0.25)continue;
+  if(villages.some(v=>Math.hypot(v[0]-x,v[1]-y)<0.75))continue;villages.push([x,y,R(.1,.24)]);n++;}
+villages.forEach(([x,y,r])=>{const c=W(x,y);const n=Math.round(r*r*1900);for(let i=0;i<n;i++){const a=R(0,6.283),d=Math.sqrt(rnd())*r*100;place(c[0]+Math.cos(a)*d,c[1]+Math.sin(a)*d,'village');}});
+const floorTex=n=>canvasTex(64,64*n,(g,w,h)=>{g.fillStyle='#ffffff';g.fillRect(0,0,w,h);for(let f=0;f<n;f++){const y=f*64;g.fillStyle='rgba(0,0,0,.10)';g.fillRect(0,y+58,w,6);for(let k=0;k<3;k++){g.fillStyle='rgba(40,52,60,.55)';g.fillRect(6+k*20,y+18,12,24);g.fillStyle='rgba(255,255,255,.35)';g.fillRect(6+k*20,y+18,12,3);}}});
+const ftex=[1,2,3,4].map(floorTex);
+{const N=BLD.length,body=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),mat(0xffffff),N);
+ const tb=[1,2,3,4].map(f=>BLD.filter(b=>b.floors===f&&!b.roof));const tms=tb.map((a,i)=>a.length?new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),mat(0xffffff,{map:ftex[i]}),a.length):null);
+ tb.forEach((a,k)=>a.forEach((b,i)=>{E.set(0,b.rot,0);Q.setFromEuler(E);M.compose(V.set(b.x,.12+b.h/2,b.z),Q,SC.set(b.w,b.h,b.d));tms[k].setMatrixAt(i,M);col.set(b.c);tms[k].setColorAt(i,col);}));
+ tms.forEach(m=>{if(m){m.castShadow=m.receiveShadow=true;scene.add(m);}});SC.set(1,1,1);
+ const roofs=BLD.filter(b=>b.roof),rm=new THREE.InstancedMesh(prismGeo(),mat(0xffffff,{metalness:.35,roughness:.55,side:THREE.DoubleSide}),roofs.length);
+ const tanks=BLD.filter(b=>b.tank),tm=new THREE.InstancedMesh(new THREE.CylinderGeometry(.08,.08,.16,8),mat(0x1f2324),tanks.length);
+ BLD.forEach((b,i)=>{if(!b.roof){body.setMatrixAt(i,ZERO);return;}E.set(0,b.rot,0);Q.setFromEuler(E);M.compose(V.set(b.x,.12+b.h/2,b.z),Q,SC.set(b.w,b.h,b.d));body.setMatrixAt(i,M);col.set(b.c);body.setColorAt(i,col);});
+ roofs.forEach((b,i)=>{E.set(0,b.rot,0);Q.setFromEuler(E);M.compose(V.set(b.x,.12+b.h,b.z),Q,SC.set(b.w*1.1,.2,b.d*1.18));rm.setMatrixAt(i,M);col.set(b.roof);rm.setColorAt(i,col);});
+ tanks.forEach((b,i)=>{M.compose(V.set(b.x+b.w*.2*Math.cos(b.rot),.12+b.h+.08,b.z-b.w*.2*Math.sin(b.rot)),Q.identity(),ONE);tm.setMatrixAt(i,M);});
+ body.castShadow=body.receiveShadow=true;rm.castShadow=true;tm.castShadow=true;scene.add(body,rm,tm);SC.set(1,1,1);}
+// Thakurgaon Road Degree College, Islam Nagar mosque, Munsirhat temple
+{const c=W(-0.84,-0.31);box(3.4,.62,.9,mat(0xe9dcc0),c[0],.12,c[1]-.8,null);box(.9,.62,2.2,mat(0xe9dcc0),c[0]-1.25,.12,c[1]+.4,null);box(.9,.62,2.2,mat(0xe9dcc0),c[0]+1.25,.12,c[1]+.4,null);box(2.6,.02,2,mat(0x8fb35e),c[0],.12,c[1]+.6,null);
+ const m=W(0.72,-0.53);box(1,.4,.8,white,m[0],.12,m[1],null);const dm=new THREE.Mesh(new THREE.SphereGeometry(.26,14,8,0,6.29,0,1.57),mat(0xeef3ee));dm.position.set(m[0],.52,m[1]);scene.add(dm);cyl(.05,.9,white,m[0]+.55,.12,m[1]-.45,null,8);
+ const t=W(1.322,-0.585);box(1.1,.35,1.1,mat(0xf3e2c4),t[0],.12,t[1],null);const sh=new THREE.Mesh(new THREE.ConeGeometry(.42,.9,8),mat(0xe8a14a));sh.position.set(t[0],.92,t[1]);sh.castShadow=true;scene.add(sh);
+ const pnd=W(0.81,-0.515);ribbon([[pnd[0]-2.4,pnd[1]],[pnd[0]+2.4,pnd[1]]],2.6,.06,water);const p2=W(-0.075,-0.282);ribbon([[p2[0]-1,p2[1]+.5],[p2[0]+1,p2[1]-.5]],.8,.06,water);}
+
+// ---------- trees ----------
+const trees=[],palms=[];
+const okTree=(x,z,m=.6)=>railDist(x,z)>2.6&&roadDist(x,z)>m&&riverDist(x,z)>2.4&&!inEstate(x,z,.5)&&occFree(x,z,.25);
+function treeAt(x,z,s,palm){if(!okTree(x,z))return;(palm?palms:trees).push([x,z,s]);}
+villages.forEach(([x,y,r])=>{const c=W(x,y),n=Math.round(r*r*9000);for(let i=0;i<n;i++){const a=R(0,6.283),d=Math.sqrt(rnd())*r*118;treeAt(c[0]+Math.cos(a)*d,c[1]+Math.sin(a)*d,R(.8,1.5),rnd()<.18);}});
+for(let i=0;i<5000;i++){const x=R(-700,700),z=R(-600,700);if(rnd()<.6){treeAt(x,z,R(.8,1.4),rnd()<.25);}else{for(let k=0;k<6;k++)treeAt(x+k*R(1.6,2.4),z+R(-.4,.4),R(.8,1.2),false);}}
+[[-1.28,-0.06,-0.42,0.17,520],[-0.95,-0.33,-0.3,-0.07,330],[-1.3,-0.86,-0.4,-0.38,520],[0.45,-0.42,0.86,0.12,420],[0.95,-0.4,1.7,0.2,450],[-0.34,-0.32,0.06,-0.1,130],[-0.42,0.27,-0.06,0.75,260]].forEach(([a,b,c,d,n])=>{const r=rect(a,b,c,d);for(let i=0;i<n;i++)treeAt(R(r.x0,r.x1),R(r.z0,r.z1),R(.65,1.25),rnd()<.15);});
+// estate boundary and road avenues
+function treeLine(pts,step,off,jit){for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.floor(L/step));const nx=(b[1]-a[1])/L,nz=-(b[0]-a[0])/L;
+  for(let k=0;k<n;k++){const t=k/n;[off,-off].forEach(o=>{if(o===0&&k%2)return;const x=a[0]+(b[0]-a[0])*t+nx*o+R(-jit,jit),z=a[1]+(b[1]-a[1])*t+nz*o+R(-jit,jit);if(railDist(x,z)>2.6&&roadDist(x,z)>.3&&riverDist(x,z)>2.4&&occFree(x,z,.2)&&!(inEstate(x,z,-1)))trees.push([x,z,R(.75,1.2)]);});}}}
+treeLine(linPts([[-2.53,0.07],[-2.53,3.58],[0.93,3.58],[0.93,0.7]]),2.6,1.2,.6);
+['z5002','town','z5055'].forEach(id=>treeLine(RD(id).wp.filter((p,i)=>i%2===0),3,1.3,.4));
+for(let i=0;i<70;i++){const x=R(H.x0+1,H.x1-1),z=rnd()<.5?R(H.z0+.5,H.z0+1.5):R(H.z1-3,H.z1-1);if(!(x>-6.5&&x<-3.5))trees.push([x,z,R(.7,1.1)]);}
+for(let i=0;i<30;i++){trees.push([R(-26,-23.5),R(90,103),R(.7,1.1)]);trees.push([R(10,16),R(91,104),R(.7,1.1)]);}
+// tea garden shade trees, mill and colony greens, river bamboo
+for(let i=0;i<120;i++){const x=R(TEAW[0][0],TEAW[2][0]),z=R(TEAW[0][1],TEAW[4][1]);if(inPoly(x,z,TEAW))trees.push([x,z,R(.6,.9)]);}
+for(let i=0;i<60;i++){const q=L2W(R(-15,15),R(15,22));if(railDist(q[0],q[1])>3)trees.push([q[0],q[1],R(.8,1.3)]);}
+for(let i=0;i<700;i++){const s=R(0,1),p=riverPts[Math.floor(s*(riverPts.length-1))];const o=(rnd()<.5?-1:1)*R(2.8,6);const x=p[0]+o,z=p[1]+R(-1,1);if(roadDist(x,z)>.6&&!inEstate(x,z))trees.push([x,z,R(.55,.95)]);}
+{const tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.05,.08,.6,5),mat(0x5b4632),trees.length+palms.length);
+ const cr=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.62,0),mat(0xffffff,{flatShading:true}),trees.length);
+ trees.forEach((t,i)=>{M.compose(V.set(t[0],.3*t[2]+.1,t[1]),Q.identity(),SC.set(t[2],t[2],t[2]));tr.setMatrixAt(i,M);
+   E.set(0,rnd()*6,0);Q.setFromEuler(E);M.compose(V.set(t[0],.95*t[2]+.1,t[1]),Q,SC.set(t[2],t[2]*R(.85,1.15),t[2]));cr.setMatrixAt(i,M);col.setHSL(.26+rnd()*.07,.36+rnd()*.16,.24+rnd()*.1);cr.setColorAt(i,col);});
+ const pc=new THREE.InstancedMesh(new THREE.ConeGeometry(.5,.22,7,1,true),mat(0x4a7a34,{side:THREE.DoubleSide,flatShading:true}),palms.length);
+ palms.forEach((t,i)=>{const k=trees.length+i;M.compose(V.set(t[0],.75*t[2]+.1,t[1]),Q.identity(),SC.set(t[2]*.6,t[2]*2.5,t[2]*.6));tr.setMatrixAt(k,M);
+   E.set(Math.PI,rnd()*6,0);Q.setFromEuler(E);M.compose(V.set(t[0],1.62*t[2]+.1,t[1]),Q,SC.set(t[2],t[2],t[2]));pc.setMatrixAt(i,M);});
+ tr.castShadow=cr.castShadow=pc.castShadow=true;scene.add(tr,cr,pc);SC.set(1,1,1);}
+
+// ---------- PEOPLE ----------
+const SHIRT=['#f2efe6','#3d6fb0','#b8402f','#2f7d4a','#d9a521','#7a2b3a','#24395e','#e07b2a','#8b5fb0','#d4d0c4','#5e7f99','#c94f7c','#e8c9a0'];
+const LUNGI=['#2c3e66','#3d5a3b','#5a3e2b','#26323a','#6b6f73','#40507a','#7a5c3a','#33493f'];
+const SKIN=['#7a4e34','#8d5b3d','#6a4330','#9a6a4a'];
+const PEOPLE=[];
+function person(o){o.ph=o.ph||0;if(o.gy===undefined)o.gy=.12;if(o.h===undefined)o.h=R(0,6.28);o.t=R(0,100);o.shirt=o.shirt||pick(SHIRT);o.legs=o.legs||pick(LUNGI);o.spd=o.spd||R(.09,.16);o.x=o.x||0;o.z=o.z||0;PEOPLE.push(o);return o;}
+function walker(pts,ph,gy,opt={}){const Pt=mkPath(pts);if(Pt.L<.5)return;const len=Math.min(Pt.L,opt.win||Pt.L);const s0=R(0,Pt.L-len);return person(Object.assign({mode:'path',Pt,s0,s1:s0+len,s:R(s0,s0+len),dir:rnd()<.5?1:-1,ph,gy},opt));}
+function wander(cx,cz,r,ph,gy,opt={}){return person(Object.assign({mode:'wander',cx,cz,r,x:cx+R(-r,r)*.7,z:cz+R(-r,r)*.7,tx:cx,tz:cz,wait:R(0,4),ph,gy},opt));}
+function worker(x,z,h,ph,gy,opt={}){return person(Object.assign({mode:'work',x0:x,z0:z,x,z,h,ax:Math.sin(h+Math.PI/2),az:Math.cos(h+Math.PI/2),range:opt.range||1.2,off:R(-1,1),wdir:rnd()<.5?1:-1,f:R(.5,.9),ph,gy},opt));}
+function stander(x,z,ph,gy,opt={}){return person(Object.assign({mode:'stand',x,z,ph,gy},opt));}
+// seed plots: groups planting and weeding
+const SEEDVIEW=[];
+salParcels.forEach((pc,i)=>{if(railDist(pc.cx,pc.cz)<9)return;if(!pc.pilot&&rnd()>.42)return;const n=pc.pilot?6:5,base=[pc.cx+R(-5,5),pc.cz+R(-5,5)];if(pc.pilot&&!SEEDVIEW.length)SEEDVIEW.push(base);
+  for(let k=0;k<n;k++)worker(base[0]+k*.5,base[1]+R(-.2,.2),0,pc.pilot?1:2,.12,{range:2.5,shirt:rnd()<.3?pick(['#c94f7c','#e07b2a','#8b5fb0','#d9a521']):undefined});});
+fodParcels.forEach(pc=>{if(rnd()>.25||railDist(pc.cx,pc.cz)<9)return;for(let k=0;k<3;k++)worker(pc.cx+k*.6,pc.cz,0,2,.12,{range:1.5});});
+// under the solar rows: fodder harvest and cleaning crews
+const SOLARVIEW=[];
+[1,2,3].forEach(ph=>{const arr=spots[ph];const n=ph===1?14:ph===2?22:70;for(let i=0;i<n&&arr.length;i++){const p=pick(arr);if(!SOLARVIEW.length&&ph===3&&inR(AGN,p[0],p[1],-20))SOLARVIEW.push(p);
+  if(rnd()<.55)worker(p[0]+R(-3,3),p[1]+.8,R(-.4,.4),ph,.12,{range:2});else walker([[p[0]-24,p[1]+.8],[p[0]+24,p[1]+.8]],ph,.12,{shirt:'#e07b2a',spd:R(.08,.12)});}});
+// Phase 4 crews
+for(let i=0;i<34&&spots4.length;i++){const p=pick(spots4);rnd()<.5?walker([[p[0]-30,p[1]+.5],[p[0]+30,p[1]+.5]],4,.12,{shirt:'#e07b2a'}):worker(p[0],p[1]+.5,0,4,.12,{shirt:'#f4c430',range:1});}
+// hub: dairy, chilling, cheese, cold store
+for(let i=0;i<8;i++)wander(-36,96.8,6,2,.2);for(let i=0;i<6;i++)wander(-36,84,7,1,.2);
+for(let i=0;i<7;i++)wander(-21,80.5,2,1,.2,{shirt:'#f2efe6'});
+for(let i=0;i<12;i++)wander(-9,82.6,4,2,.2,{shirt:'#f2efe6',legs:'#d4d0c4'});
+for(let i=0;i<8;i++)wander(4,84.5,3.5,2,.2);for(let i=0;i<5;i++)wander(19,82,2.5,2,.2);
+for(let i=0;i<8;i++)walker([[-7+i*1.3,109.3],[-7+i*1.3,111.4]],2,.2,{shirt:pick(['#2f7d4a','#f2efe6']),spd:R(.1,.14)});
+for(let i=0;i<6;i++)wander(-2.5,110.5,4,2,.2);
+for(let i=0;i<8;i++)worker(-41+i*1.2,107+(i%5)*2,0,1,.2,{range:2});
+// mill compound, colony, mosque, playground, rest house
+for(let i=0;i<26;i++){const q=L2W(R(-14,14),R(3,10));wander(q[0],q[1],3,0,.14);}
+{const g=L2W(-15,8);for(let i=0;i<3;i++)stander(g[0]+i*.3,g[1],0,.14,{shirt:'#24395e'});}
+const pg=W(-0.2,0.6);for(let i=0;i<14;i++)wander(pg[0],pg[1],1.2,0,.15,{spd:R(.18,.26),shirt:i<7?'#b8402f':'#3d6fb0'});
+const ms=W(-0.146,0.43);for(let i=0;i<9;i++)stander(ms[0]+R(-1,1),ms[1]+R(.65,.9),0,.15,{shirt:'#f2efe6',legs:'#f2efe6'});
+const rh=W(-0.1,0.19);for(let i=0;i<3;i++)wander(rh[0]-.4,rh[1]+.6,.8,0,.13);
+quarterSpots.forEach((q,i)=>{if(i%3===0)wander(q[0],q[1]+.7,1.5,0,.12);});
+// Thakurgaon Road station: waiting passengers and walkers on the platform
+{const toW=(lx,lz)=>{const v=new THREE.Vector3(lx,0,lz).applyAxisAngle(YA,stG.rotation.y);return[stG.position.x+v.x,stG.position.z+v.z];};
+ for(let i=0;i<34;i++){const q=toW(R(-7.5,7.5),R(-.85,-.45));stander(q[0],q[1],0,.32,{h:R(0,6.28)});}
+ for(let i=0;i<10;i++)walker([toW(-8,-.62),toW(8,-.62)],0,.32,{win:R(4,10)});
+ for(let i=0;i<14;i++){const q=toW(R(-2.8,2.8),R(-3.7,-2.1));wander(q[0],q[1],1.2,0,.21);}
+}
+// town streets and bazar: pedestrians along the road edges
+ROADS.filter(r=>r.k!=='track').forEach(r=>{const town=r.k==='minor'?1:0;const inTown=p=>p[0]>W(-0.45,0)[0]&&p[0]<W(1.65,0)[0]&&p[1]>W(0,0.25)[1]&&p[1]<W(0,-0.9)[1];
+  const seg=r.wp.filter(inTown);if(seg.length<2)return;const n=Math.round(mkPath(seg).L*(town?.55:.4));
+  for(let i=0;i<n;i++){const side=rnd()<.5?1:-1;walker(offsetPoly(seg,side*(r.w/2+.12)),0,r.k==='main'?.2:.19,{win:R(4,14)});}});
+['z5002','z5055','town','mill','rest'].forEach(id=>{const r=RD(id);for(let i=0;i<16;i++){const side=rnd()<.5?1:-1;walker(offsetPoly(r.wp,side*(r.w/2+.15)),0,.2,{win:R(5,20)});}});
+// tea pluckers and herders
+for(let i=0;i<28;i++){const x=R(TEAW[0][0],TEAW[1][0]),z=R(TEAW[0][1],TEAW[4][1]);if(inPoly(x,z,TEAW))worker(x,z,R(0,6.28),0,.12,{shirt:pick(['#c94f7c','#e07b2a','#d9a521','#8b5fb0','#b8402f']),legs:pick(['#c94f7c','#d9a521','#2f7d4a']),range:.8});}
+for(let i=0;i<8;i++)wander(R(FOD.x0+10,FOD.x1-10),R(FOD.z1-50,FOD.z1-8),8,2,.12,{shirt:'#d4d0c4'});
+for(let i=0;i<4;i++)wander(SUB.x,SUB.z,6,3,.2,{shirt:'#e07b2a'});
+const NP=PEOPLE.length;
+const legG=new THREE.BoxGeometry(.018,.08,.022);legG.translate(0,-.04,0);
+const torsoG=new THREE.BoxGeometry(.05,.07,.03);torsoG.translate(0,.035,0);
+const headG=new THREE.SphereGeometry(.019,8,6);
+const legI=new THREE.InstancedMesh(legG,mat(0xffffff),NP*2),torI=new THREE.InstancedMesh(torsoG,mat(0xffffff),NP),headI=new THREE.InstancedMesh(headG,mat(0xffffff,{roughness:.7}),NP);
+PEOPLE.forEach((o,i)=>{col.set(o.legs);legI.setColorAt(i*2,col);legI.setColorAt(i*2+1,col);col.set(o.shirt);torI.setColorAt(i,col);col.set(pick(SKIN));headI.setColorAt(i,col);});
+legI.castShadow=torI.castShadow=headI.castShadow=true;
+[legI,torI,headI].forEach(m=>{m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);m.frustumCulled=false;scene.add(m);});
+const qH=new THREE.Quaternion(),qB=new THREE.Quaternion(),qL=new THREE.Quaternion(),HIP=new THREE.Vector3(),TMP=new THREE.Vector3();
+function updPeople(dt,time,phase){
+  for(let i=0;i<NP;i++){const o=PEOPLE[i];
+    if(o.ph>phase){legI.setMatrixAt(i*2,ZERO);legI.setMatrixAt(i*2+1,ZERO);torI.setMatrixAt(i,ZERO);headI.setMatrixAt(i,ZERO);continue;}
+    let moving=false,bend=0;
+    if(o.mode==='path'){o.s+=o.dir*o.spd*dt;if(o.s>o.s1){o.s=o.s1;o.dir=-1;}if(o.s<o.s0){o.s=o.s0;o.dir=1;}along(o.Pt,o.s,AL);o.x=AL.x;o.z=AL.z;o.h=Math.atan2(AL.dx*o.dir,AL.dz*o.dir);moving=true;}
+    else if(o.mode==='wander'){if(o.wait>0)o.wait-=dt;else{const dx=o.tx-o.x,dz=o.tz-o.z,d=Math.hypot(dx,dz);if(d<.04){o.tx=o.cx+R(-o.r,o.r);o.tz=o.cz+R(-o.r,o.r);o.wait=R(0,5);}else{const st=Math.min(d,o.spd*dt);o.x+=dx/d*st;o.z+=dz/d*st;o.h=Math.atan2(dx,dz);moving=true;}}}
+    else if(o.mode==='work'){o.off+=o.wdir*o.spd*.12*dt;if(Math.abs(o.off)>o.range)o.wdir*=-1;o.x=o.x0+o.ax*o.off;o.z=o.z0+o.az*o.off;const b=.5+.5*Math.sin(time*o.f+o.t);bend=.2+.95*b*b;}
+    else{o.h+=Math.sin(time*.4+o.t)*.004;}
+    const ph=time*9*(o.spd/.13)+o.t,sw=moving?Math.sin(ph)*.5:0,bob=moving?Math.abs(Math.cos(ph))*.006:0;
+    HIP.set(o.x,o.gy+.08+bob-bend*.012,o.z);qH.setFromAxisAngle(YA,o.h);
+    for(let s=-1;s<=1;s+=2){qB.setFromAxisAngle(XA,sw*s);qL.copy(qH).multiply(qB);TMP.set(.013*s,0,0).applyQuaternion(qH).add(HIP);M.compose(TMP,qL,ONE);legI.setMatrixAt(i*2+(s>0?1:0),M);}
+    qB.setFromAxisAngle(XA,bend);qL.copy(qH).multiply(qB);M.compose(HIP,qL,ONE);torI.setMatrixAt(i,M);
+    TMP.set(0,.089,0).applyQuaternion(qL).add(HIP);M.compose(TMP,qH,ONE);headI.setMatrixAt(i,M);}
+  legI.instanceMatrix.needsUpdate=torI.instanceMatrix.needsUpdate=headI.instanceMatrix.needsUpdate=true;}
+function updCows(dt,phase){if(phase<2)return;for(let i=0;i<COWS.length;i++){const c=COWS[i];
+  if(c.wait>0)c.wait-=dt;else{const dx=c.tx-c.x,dz=c.tz-c.z,d=Math.hypot(dx,dz);if(d<.05){c.tx=c.cx+R(-c.r,c.r);c.tz=c.cz+R(-c.r,c.r)*.6;c.wait=R(3,14);}else{const st=Math.min(d,.035*dt);c.x+=dx/d*st;c.z+=dz/d*st;c.h=-Math.atan2(dz,dx);}}
+  E.set(0,c.h,0);Q.setFromEuler(E);M.compose(V.set(c.x,.12+.115,c.z),Q,ONE);cowBody.setMatrixAt(i,M);V2.set(.14,.03-(c.wait>0?.04:0),0).applyQuaternion(Q);M.compose(V.add(V2),Q,ONE);cowHead.setMatrixAt(i,M);}
+  cowBody.instanceMatrix.needsUpdate=cowHead.instanceMatrix.needsUpdate=true;}
+
+// ---------- VEHICLES ----------
+const VM={};const vmat=c=>VM[c]||(VM[c]=mat(c,{roughness:.55,metalness:.15}));
+const wheelG=new THREE.CylinderGeometry(.04,.04,.03,10);wheelG.rotateX(Math.PI/2);
+function wheels(g,xs,zs,r){xs.forEach(x=>zs.forEach(z=>{const w=new THREE.Mesh(wheelG,vmat(0x1d1d1d));w.position.set(x,r||.04,z);if(r)w.scale.set(r/.04,r/.04,1);g.add(w);}));}
+function vb(g,w,h,d,c,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),vmat(c));m.position.set(x,y+h/2,z);m.castShadow=true;g.add(m);return m;}
+function rider(g,x,c){vb(g,.04,.06,.035,c||pick(SHIRT),x,.1,0);const h=new THREE.Mesh(headG,vmat(0x7a4e34));h.position.set(x,.18,0);g.add(h);}
+function vehicle(k){const g=new THREE.Group();
+  if(k==='truck'){const c=pick([0xd9532b,0x2f7d4a,0x2a5c8a,0xe0a82e,0xb83a5a]);vb(g,.5,.22,.24,c,-.1,.06,0);vb(g,.21,.2,.23,pick([0xe9e4d8,0xc9402f,0x2a5c8a]),.28,.05,0);vb(g,.02,.08,.2,0x22303a,.39,.15,0);wheels(g,[-.25,.05,.3],[-.11,.11]);}
+  else if(k==='bus'){const c=pick([0x2f7d4a,0xc9402f,0x2a5c8a,0xe9e4d8]);vb(g,1.0,.26,.25,c,0,.05,0);vb(g,.92,.07,.254,0x22303a,0,.19,0);wheels(g,[-.35,.35],[-.12,.12]);}
+  else if(k==='cng'){vb(g,.26,.13,.13,0x2f8a3e,0,.04,0);vb(g,.22,.02,.14,0x1f5a2a,-.01,.18,0);wheels(g,[-.08,.1],[-.06,.06],.03);}
+  else if(k==='rickshaw'){vb(g,.1,.05,.1,pick([0xc9402f,0x2a5c8a,0xd9a521]),-.04,.06,0);vb(g,.08,.09,.11,pick([0xc94f7c,0x2f7d4a,0x24395e,0xe07b2a]),-.07,.12,0);vb(g,.14,.02,.02,0x333333,.05,.06,0);wheels(g,[-.05],[-.06,.06],.04);wheels(g,[.12],[0],.03);rider(g,.1);}
+  else if(k==='car'){const c=pick([0xf2f2ee,0xb9bec2,0x1f2a36,0x8a1f1f]);vb(g,.42,.09,.18,c,0,.04,0);vb(g,.22,.07,.16,0x2a3440,-.02,.13,0);wheels(g,[-.13,.13],[-.09,.09],.035);}
+  else if(k==='bike'){vb(g,.18,.04,.04,0x1d1d1d,0,.04,0);rider(g,-.01);wheels(g,[-.07,.07],[0],.03);}
+  else if(k==='tractor'){vb(g,.26,.1,.13,pick([0xc9402f,0x2a5c8a]),.03,.06,0);wheels(g,[-.06],[-.08,.08],.07);wheels(g,[.12],[-.06,.06],.04);rider(g,-.05,'#f2efe6');vb(g,.34,.08,.17,0x7a6a4a,-.34,.05,0);wheels(g,[-.34],[-.1,.1],.04);}
+  else if(k==='van'){vb(g,.44,.18,.18,0xf4f4f0,-.03,.04,0);vb(g,.445,.035,.182,0x2f7d4a,-.03,.12,0);vb(g,.02,.07,.16,0x22303a,.195,.12,0);wheels(g,[-.15,.12],[-.09,.09],.04);}
+  else if(k==='pickup'){vb(g,.4,.08,.17,0xf2f2ee,0,.05,0);vb(g,.16,.08,.16,0xf2f2ee,.08,.13,0);vb(g,.02,.06,.14,0x22303a,.165,.14,0);wheels(g,[-.12,.12],[-.085,.085],.04);}
+  return g;}
+const VEH=[];
+function addVeh(k,pts,opt={}){const Pt=mkPath(pts);if(Pt.L<1)return;const g=vehicle(k);scene.add(g);const big=k==='bus'||k==='truck';
+  VEH.push(Object.assign({g,Pt,s:R(0,Pt.L),dir:rnd()<.5?1:-1,spd:{truck:.95,bus:1.05,cng:.85,rickshaw:.32,car:1.25,bike:1.1,tractor:.3,van:.85,pickup:.7}[k]*R(.85,1.15),lane:big?.32:.36,y:.2,ph:0,s0:0,s1:Pt.L},opt));}
+const cat=(...a)=>a.reduce((acc,p)=>acc.concat(acc.length?p.slice(1):p),[]);
+const mainChain=cat(RD('z5002').wp,RD('town').wp),z55=cat(RD('z5055').wp.slice().reverse(),RD('town').wp);
+[['truck',8],['bus',4],['cng',14],['car',5],['bike',8]].forEach(([k,n])=>{for(let i=0;i<n;i++)addVeh(k,mainChain);});
+[['truck',3],['cng',6],['bike',3],['rickshaw',3]].forEach(([k,n])=>{for(let i=0;i<n;i++)addVeh(k,z55);});
+{const tw=RD('town').wp.filter(p=>p[0]<W(1.15,0)[0]);for(let i=0;i<12;i++)addVeh('rickshaw',tw);
+ ['stn','g6','g7','g9','g4','mill','rest'].forEach(id=>{for(let i=0;i<3;i++)addVeh(rnd()<.7?'rickshaw':'bike',RD(id).wp,{lane:.12,y:.19});});
+ for(let i=0;i<4;i++)addVeh('cng',RD('stn').wp,{lane:.14,y:.19});}
+// park traffic: cold-chain and milk vans to town, solar O&M, tractors on the seed farm and fodder
+const coldRoute=smoothPts([[-0.85,0.3],[-0.85,0.19],[-0.753,0.178],[-0.129,0.166],[-0.15,0.032],[-0.172,-0.118],[-0.204,-0.269],[-0.262,-0.362],[-0.114,-0.452],[0.032,-0.366],[0.161,-0.28],[0.215,-0.258],[0.312,-0.323],[0.409,-0.419],[0.484,-0.467],[0.677,-0.473],[0.892,-0.456],[1.107,-0.505],[1.563,-0.608]],1.4);
+addVeh('van',coldRoute,{ph:1,lane:.2,s:0});addVeh('van',coldRoute,{ph:2,lane:.2,s:60});addVeh('truck',coldRoute,{ph:2,lane:.2,s:120});addVeh('truck',coldRoute,{ph:2,lane:.2,s:200});
+addVeh('pickup',smoothPts([[-0.123,0.204],[-0.121,0.45],[-0.118,0.742],[-0.118,1.95],[-1.2,1.95],[-2.45,1.95]],1.4),{ph:1,lane:.15});
+addVeh('pickup',linPts([[-1.3,0.25],[-1.3,1.95]]),{ph:3,lane:.15,y:.165});
+addVeh('pickup',linPts([[-4.65,1.35],[-2.65,1.35]]),{ph:4,lane:.15,y:.16});addVeh('pickup',linPts([[-3.65,0.3],[-3.65,2.4]]),{ph:4,lane:.15,y:.16});
+salParcels.forEach(pc=>{if(rnd()>.12||railDist(pc.cx,pc.cz)<10)return;addVeh('tractor',[[pc.cx-pc.pw/2+2,pc.cz+R(-6,6)],[pc.cx+pc.pw/2-2,pc.cz+R(-6,6)]],{ph:pc.pilot?1:2,lane:0,y:.12});});
+fodParcels.forEach(pc=>{if(rnd()>.12||railDist(pc.cx,pc.cz)<10)return;addVeh('tractor',[[pc.cx,pc.cz-pc.pd/2+2],[pc.cx,pc.cz+pc.pd/2-2]],{ph:2,lane:0,y:.12});});
+[[-36,101.6],[-2.5,111.6]].forEach(p=>{const g=vehicle('truck');g.position.set(p[0]+3,.2,p[1]);g.rotation.y=Math.PI/2;P[2].add(g);});
+{const g=vehicle('van');g.position.set(-13,.2,107.5);P[2].add(g);const g2=vehicle('truck');g2.position.set(-14,.2,108.5);P[2].add(g2);}
+function updVeh(dt,phase){for(const v of VEH){if(v.ph>phase){v.g.visible=false;continue;}v.g.visible=true;
+  v.s+=v.dir*v.spd*dt;if(v.s>v.s1){v.s=v.s1;v.dir=-1;}if(v.s<v.s0){v.s=v.s0;v.dir=1;}
+  along(v.Pt,v.s,AL);const tx=AL.dx*v.dir,tz=AL.dz*v.dir;v.g.position.set(AL.x+tz*v.lane,v.y,AL.z-tx*v.lane);v.g.rotation.y=-Math.atan2(tz,tx);}}
+
+// ---------- TRAIN: stops at Thakurgaon Road ----------
+const train=[];
+{const coach=c=>{const g=new THREE.Group();vb(g,2,.28,.3,c,0,.36,0);vb(g,2.01,.06,.302,0xe8d9a0,0,.47,0);vb(g,1.9,.05,.303,0x22303a,0,.53,0);vb(g,2,.05,.28,0xbfc3c0,0,.64,0);scene.add(g);return g;};
+ const loco=new THREE.Group();vb(loco,1.7,.34,.3,0x2a4c8a,0,.36,0);vb(loco,1.72,.08,.302,0xd9a521,0,.48,0);vb(loco,.4,.12,.3,0xc9402f,.62,.7,0);scene.add(loco);train.push(loco);
+ for(let i=0;i<9;i++)train.push(coach(i===8?0x7a3b2e:0x2f6b47));}
+const CAR=2.15,STOP_S=STN.s+4*CAR;let trainS=STOP_S-120,trainStop=0,trainPassed=false;
+function updTrain(dt){
+  if(trainStop>0){trainStop-=dt;if(trainStop<=0)trainPassed=true;}
+  else{const d=STOP_S-trainS;let v=2.1;if(!trainPassed&&d>0&&d<55)v=Math.max(.12,2.1*d/55);if(!trainPassed&&d<=.05){trainStop=14;v=0;}if(trainPassed&&trainS-STOP_S<40)v=Math.max(.25,2.1*(trainS-STOP_S+1)/40);
+    trainS+=v*dt;if(trainS>RAIL_L+30){trainS=-30;trainPassed=false;}}
+  train.forEach((g,i)=>{const s=trainS-i*CAR;if(s<1||s>RAIL_L-1){g.visible=false;return;}g.visible=true;const f=frameAt(s);g.position.set(f.p.x,0,f.p.z);g.rotation.y=-Math.atan2(f.t.z,f.t.x);});}
+
+// ---------- labels, zones, interaction ----------
+const L=(x,y,h)=>{const q=W(x,y);return[q[0],h||3,q[1]];};
+const camFor=(t,d,az,el)=>{az*=Math.PI/180;el*=Math.PI/180;return{pos:[t[0]+Math.sin(az)*Math.cos(el)*d,t[1]+Math.sin(el)*d,t[2]+Math.cos(az)*Math.cos(el)*d],tgt:t};};
+const ZONES=[
+  {id:'agv',name:'Agrivoltaic solar park',color:'#C98A12',acres:'~1,200 ac',pos:L(-0.75,1.45,5),view:[110,35,48],phase:'1 to 3',
+   text:'Raised 5 m solar frames across the open estate earn long-term power income, with fodder and crops grown between and under the rows. A 1 MW pilot in Phase 1, the first ~5 MW grid block in Phase 2 and the full ~100 MW park in Phase 3.',
+   facts:[['Capacity','~100 MW'],['Output','~145 GWh a year'],['Homes powered','~1.1 lakh'],['Buyer','BPDB, long-term PPA'],['PPA target','Tk 10.5/kWh'],['Finance','up to 6% (Tk 1,500 cr fund)'],['Land below','fodder and crops']]},
+  {id:'ph4',name:'Phase 4 · +400 MW ground-mount',color:'#3E6FA8',acres:'~1,150 ac',pos:L(-3.65,1.6,5),view:[260,40,45],phase:'4 (option)',p4:true,
+   text:'Adds 400 MW of ground-mount solar at market cost on adjacent or denser land, taking the park to about 500 MW. Transmission is built by the Ministry of Power through PGCB; proceed only with a written PGCB commitment.',
+   facts:[['Added capacity','400 MW'],['Investment','Tk 2,982 crore'],['Cost per MW','~Tk 7.1 crore'],['Extra output','~580 GWh a year'],['Whole park','~500 MW, Tk 4,232 crore'],['National share','~0.7% of power'],['Homes powered','~5.5 lakh'],['Year-1 net profit','~45% before tax']]},
+  {id:'sal',name:'Salandar seed farm',color:'#4E8A36',acres:'~800 ac',pos:L(-1.6,2.95,4),view:[120,30,48],phase:'1 to 2',
+   text:'Drained with LGED in Phase 1 after 814 acres sat under water for nearly four months (Jul 2026). It then grows certified potato and maize seed from tissue-culture and foundation stock.',
+   facts:[['Drainage','LGED canals, Phase 1'],['Crop','certified potato, maize seed'],['Seed price','Tk 80-100/kg (Oct 2024)'],['Yield lift for growers','15-20%']]},
+  {id:'cold',name:'Green cold storage · 2 × 500 t',color:'#B07A45',acres:'in hub',pos:[COLD.x,1.6,COLD.z],view:[24,165,32],phase:'2',
+   text:"A solar–grid hybrid multi-crop cold store with thermal storage, with potato and horticulture chambers, open to all local farmers and traders all year. The district's 17 cold stores hold 145,532 t, only about 17% of the 868,125 t potato crop, and their potato-only rooms sit idle off-season.",
+   facts:[['Capacity','2 × 500 t'],['Power','rooftop solar, grid backup'],['Thermal storage','holds cold through outages'],['Chambers','potato, horticulture'],['Open to','all local farmers'],['Earns','storage rent all year']]},
+  {id:'hub',name:'Livestock, milk and mozzarella hub',color:'#D2694A',acres:'~90 ac',pos:[-24,10,80],view:[55,200,40],phase:'1 to 3',
+   text:'Rooftop-solar dairy sheds, milk testing and chilling, an export-grade halal mozzarella plant, the seed grading line and seed cold store, and a feed and rations unit, beside the road to the mill.',
+   facts:[['Buyers','cheese makers, hotels, Gulf export'],['Cheese cluster','~70% of national mozzarella'],['Mozzarella price','Tk 500-700/kg'],['Phase 1','chilling centre, first shed']]},
+  {id:'comp',name:'Compost yard',color:'#7A5A3A',acres:'in hub',pos:[-38,2,110],view:[20,200,35],minor:true,phase:'1',
+   text:'Covered worm beds turn dairy manure and crop residue into tested organic fertiliser for the seed and fodder plots, with the surplus sold to nearby farmers.',
+   facts:[['Cost','~Tk 7/kg'],['Sale price','Tk 10-20/kg'],['Margin per 100 t','Tk 3-13 lakh']]},
+  {id:'fod',name:'Fodder and grazing',color:'#7FAE5A',acres:'~520 ac',pos:L(0.25,2.9,3),view:[100,35,45],phase:'2 to 3',
+   text:'Fodder and grazing for the dairy herd, expanded in Phase 3 as the herd grows to supply the cheese cluster.',
+   facts:[['Feeds','park herd, local dairy farms'],['Inputs','compost'],['Phase 3','expanded fodder and dairy']]},
+  {id:'mill',name:'Mill compound, rooftop solar',color:'#8C8F86',acres:'~140 ac',pos:[MILLC[0],9,MILLC[1]],view:[60,150,36],phase:'1',
+   text:'The existing mill buildings stay, west of the railway and a short walk from Thakurgaon Road station, with rooftop solar and batteries powering seed storage, grading and milk chilling. The future of the sugar plant is to be decided; past losses and liabilities stay with BSFIC.',
+   facts:[['Solar cost','Tk 4-5/kWh'],['Grid power','Tk 12.73/kWh'],['Saving','Tk 77-87 lakh per million kWh'],['Battery surplus sale','Tk 10.50/kWh']]},
+  {id:'sub',name:'132 kV substation',color:'#6E7B72',acres:'',pos:[SUB.x,4,SUB.z],view:[40,140,35],minor:true,phase:'3',
+   text:'Steps solar output up to grid voltage for the BPDB PPA. Confirming substation and line capacity with PGCB is the first feasibility task.',
+   facts:[['Key gate','PGCB capacity'],['Built','Phase 3']]},
+];
+const stc=STN.p;
+const LANDMARKS=[
+  {name:'Thakurgaon Road station',pos:[stc.x,1.6,stc.z],near:9e9},
+  {name:'1 MW pilot block',pos:[PILOT.x,2,PILOT.z],near:420},
+  {name:'LGED drainage canals',pos:L(-2.1,2.5,2),near:520},
+  {name:'Suk River',pos:L(1.38,1.8,1.5),near:700},
+  {name:'Baliadangi Mor',pos:L(-0.114,-0.452,1.2),near:260},
+  {name:'Town junction and bazar',pos:L(0.22,-0.27,1.6),near:300},
+  {name:'Sugar Mills Rest House',pos:L(-0.1,0.19,1),near:150},
+  {name:'Sugar Mills Jame Mosque',pos:L(-0.146,0.43,1.4),near:150},
+  {name:'Colony playground',pos:L(-0.2,0.6,.8),near:150},
+  {name:'Thakurgaon Road Degree College',pos:L(-0.84,-0.31,1.2),near:200},
+  {name:'Islam Nagar',pos:L(0.75,-0.66,1),near:260},
+  {name:'Suk River Bridge',pos:L(0.9,-0.456,1),near:220},
+  {name:"Aman's Tea Garden",pos:L(0.5,0.45,1),near:260},
+  {name:'Hariharpur',pos:L(-0.15,-0.2,1),near:200},
+  {name:'Munsirhat',pos:L(1.35,-0.62,1),near:260},
+  {name:'Baliadangi Rd (Z5002)',pos:L(-1.85,0,1),near:420},
+  {name:'Z5055',pos:L(-0.62,-1.32,1),near:420},
+  {name:'Rail to Panchagarh',pos:L(-1.42,4.4,1.5),near:700},
+  {name:'Rail to Dinajpur',pos:L(0.4,-1.9,1.5),near:700},
+  {name:'New PGCB line (Phase 4)',pos:L(-3.1,-0.9,7),near:900,ph:4},
+];
+const labelsEl=document.getElementById('labels'),labelObjs=[];
+function addLabel(name,pos,color,minor,onClick,o={}){const d=document.createElement('div');d.className='lbl'+(minor?' minor':'')+(o.p4?' p4':'');d.innerHTML=(color&&!minor?`<i style="background:${color}"></i>`:'')+name;labelsEl.appendChild(d);if(onClick)d.addEventListener('click',onClick);labelObjs.push({el:d,v:new THREE.Vector3(...pos),near:o.near||9e9,ph:o.ph||0});}
+ZONES.forEach(z=>addLabel(z.name,z.pos,z.color,z.minor,()=>select(z.id),{p4:z.p4,ph:z.p4?4:0,near:z.minor?260:9e9}));
+LANDMARKS.forEach(l=>addLabel(l.name,l.pos,null,true,()=>{const c=camFor([l.pos[0],0,l.pos[2]],Math.min(60,l.near/6),150,32);flyTo(c.pos,c.tgt);},{near:l.near,ph:l.ph}));
+
+const list=document.getElementById('zonelist');
+ZONES.forEach(z=>{const b=document.createElement('button');b.className='zone';b.id='z-'+z.id;b.setAttribute('aria-pressed','false');b.innerHTML=`<span class="sw" style="background:${z.color}"></span><span>${z.name}</span><small>${z.acres}</small>`;b.addEventListener('click',()=>select(z.id));list.appendChild(b);});
+
+const sv=SEEDVIEW[0]||[SAL.x1-20,SAL.z1-20],so=SOLARVIEW[0]||[AGN.x,AGN.z],jn=W(0.2,-0.29),br=W(0.9,-0.456);
+const VIEWS=[
+  {n:'Thakurgaon Road station',t:[stc.x,.3,stc.z],v:[26,105,26]},
+  {n:'Mill and colony',t:[MILLC[0]-6,0,MILLC[1]-10],v:[62,140,34]},
+  {n:'Green cold store',t:[COLD.x-2,.5,COLD.z],v:[30,150,26],ph:2},
+  {n:'Dairy and mozzarella',t:[-16,.4,85],v:[26,195,30],ph:2},
+  {n:'Seed plots at work',t:[sv[0]+1,.2,sv[1]],v:[7,25,24]},
+  {n:'Under the solar rows',t:[so[0],.35,so[1]+.8],v:[6,75,9],ph:3},
+  {n:'Town bazar and junction',t:[jn[0],.2,jn[1]],v:[30,205,34]},
+  {n:'Suk River bridge',t:[br[0],.2,br[1]],v:[20,-35,26]},
+  {n:'Phase 4 · 400 MW',t:[P4R.x,0,P4R.z],v:[230,40,40],ph:4},
+];
+const viewsEl=document.getElementById('views');
+VIEWS.forEach(v=>{const b=document.createElement('button');b.className='chip';b.type='button';b.textContent=v.n;b.addEventListener('click',()=>{if(v.ph&&curPhase<v.ph)setPhase(v.ph,true);const c=camFor(v.t,...v.v);flyTo(c.pos,c.tgt);});viewsEl.appendChild(b);});
+
+const detail=document.getElementById('detail');
+function showOverview(){detail.innerHTML=`<h2>How the park fits together</h2><p>Solar earns the base income and agriculture adds margin on the same land. Fodder grows under the panels and feeds the herd; manure becomes compost for the seed farm; tested, chilled milk goes to the mozzarella plant and the local cheese cluster; the green cold store holds farmers' potatoes and vegetables all year.</p><dl class="facts"><dt>Estate</dt><dd>~2,800 acres</dd><dt>Lease asked</dt><dd>30 years</dd><dt>Business lines</dt><dd>12</dd><dt>Phases 1 to 3</dt><dd>Tk 1,250 crore</dd><dt>With Phase 4</dt><dd>Tk 4,232 crore</dd><dt>Solar finance</dt><dd>up to 6%</dd><dt>Local payroll</dt><dd>Tk 12.6 cr a year</dd><dt>Mill liabilities</dt><dd>stay with BSFIC</dd></dl>`;}
+showOverview();
+
+let tween=null;
+function flyTo(pos,tgt){tween={t:0,p0:camera.position.clone(),t0:controls.target.clone(),p1:new THREE.Vector3(...pos),t1:new THREE.Vector3(...tgt)};controls.autoRotate=false;}
+function select(id){const z=ZONES.find(q=>q.id===id);if(z.p4&&curPhase<4)setPhase(4,true);
+  document.querySelectorAll('.zone').forEach(b=>b.setAttribute('aria-pressed',b.id==='z-'+id?'true':'false'));
+  detail.innerHTML=`<h2>${z.name}</h2><p>${z.text}</p><dl class="facts">${z.acres?`<dt>Area</dt><dd>${z.acres.replace('ac','acres')}</dd>`:''}<dt>Phase</dt><dd>${z.phase}</dd>${z.facts.map(f=>`<dt>${f[0]}</dt><dd>${f[1]}</dd>`).join('')}</dl>`;
+  const c=camFor([z.pos[0],0,z.pos[2]],...z.view);flyTo(c.pos,c.tgt);}
+const HOME=camFor([-15,0,25],640,35,38),HOME4=camFor([-125,0,15],800,32,40);
+document.getElementById('reset').addEventListener('click',()=>{document.querySelectorAll('.zone').forEach(b=>b.setAttribute('aria-pressed','false'));showOverview();const h=curPhase>=4?HOME4:HOME;flyTo(h.pos,h.tgt);});
+camera.position.set(...HOME.pos);controls.target.set(...HOME.tgt);
+
+const notes={
+  1:'<b>Phase 1 · Tk 25 crore, equity investment.</b> Usable land verified with BSFIC, rooftop and array solar powering the park, a 1 MW agrivoltaic pilot block, pilot seed plots, compost unit, milk production, milk chilling centre, and Salandar drainage with LGED.',
+  2:'<b>Phase 2 · scaled to Tk 125 crore, bank and agri credit.</b> Certified potato and maize seed plots, grading line and seed cold store, a green multi-crop cold store (2 × 500 t), dairy herd with a feed and rations unit, halal mozzarella plant and the first ~5 MW grid-connected agrivoltaic block.',
+  3:'<b>Phase 3 · scaled to Tk 1,250 crore with project finance.</b> The full ~100 MW agrivoltaic park with a 132 kV substation and grid PPA, plus expanded fodder and dairy supplying cheese producers.',
+  4:'<b>Phase 4 · Tk 2,982 crore more at up to 6% finance (option).</b> Adds 400 MW of ground-mount solar at about Tk 7.1 crore/MW on adjacent or denser land, with transmission built by the Ministry of Power through PGCB. Whole park about 500 MW for Tk 4,232 crore; the Investor Brief puts year-1 net profit before tax at about 45%, against 24% at 100 MW.'};
+let curPhase=3;
+function setPhase(p,quiet){const was=curPhase;curPhase=p;
+  P[2].visible=p>=2;P[3].visible=p>=3;P[4].visible=p>=4;
+  swapParcels.forEach(s=>{s.m.material=(p>=2||s.pilot)?s.live:s.idle;});
+  document.querySelectorAll('.ph').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.p===p?'true':'false'));
+  document.getElementById('phasenote').innerHTML=notes[p];
+  if(!quiet&&p===4&&was<4)flyTo(HOME4.pos,HOME4.tgt);
+  if(!quiet&&p<4&&was===4)flyTo(HOME.pos,HOME.tgt);}
+document.querySelectorAll('.ph').forEach(b=>b.addEventListener('click',()=>setPhase(+b.dataset.p)));
+setPhase(3,true);
+
+// data view on/off
+const dataBtn=document.getElementById('dataBtn');
+function setData(on){document.body.classList.toggle('clean',!on);dataBtn.setAttribute('aria-pressed',on?'true':'false');document.getElementById('dataState').textContent=on?'On':'Off';resize();}
+dataBtn.addEventListener('click',()=>setData(document.body.classList.contains('clean')));
+window.addEventListener('keydown',e=>{if((e.key==='d'||e.key==='D')&&!e.metaKey&&!e.ctrlKey&&!e.altKey)setData(document.body.classList.contains('clean'));});
+if(/[?#&]clean/.test(location.href))document.body.classList.add('clean');
+{const u=location.href,ph=u.match(/[?&#]phase=(\d)/),vw=u.match(/[?&#]view=(\d+)/),zn=u.match(/[?&#]zone=(\w+)/);if(ph)setPhase(+ph[1],true);
+ if(vw&&VIEWS[+vw[1]]){const v=VIEWS[+vw[1]];if(v.ph&&curPhase<v.ph)setPhase(v.ph,true);const c=camFor(v.t,...v.v);camera.position.set(...c.pos);controls.target.set(...c.tgt);}
+ if(zn&&ZONES.find(z=>z.id===zn[1])){select(zn[1]);camera.position.copy(tween.p1);controls.target.copy(tween.t1);tween=null;}}
+
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);const off=(w>820&&!document.body.classList.contains('clean'))?380:0;camera.aspect=(w+off)/h;if(off)camera.setViewOffset(w+off,h,off,0,w,h);else camera.clearViewOffset();camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);resize();
+
+const needle=document.getElementById('needle'),tmp=new THREE.Vector3();
+let last=performance.now(),FR=0,time=0,shHalf=0,lastNear=0;
+function frame(now){
+  const dt=STILL?0:Math.min(.05,(now-last)/1000);last=now;time+=dt;
+  if(tween){tween.t=Math.min(1,tween.t+(STILL?1:dt/1.6));const k=tween.t<.5?4*tween.t**3:1-Math.pow(-2*tween.t+2,3)/2;camera.position.lerpVectors(tween.p0,tween.p1,k);controls.target.lerpVectors(tween.t0,tween.t1,k);if(tween.t>=1)tween=null;}
+  controls.target.x=THREE.MathUtils.clamp(controls.target.x,-900,700);controls.target.z=THREE.MathUtils.clamp(controls.target.z,-800,800);
+  controls.update();
+  const dist=camera.position.distanceTo(controls.target);
+  const near=THREE.MathUtils.clamp(dist*.004,.04,2);if(Math.abs(near-lastNear)>lastNear*.15){lastNear=near;camera.near=near;camera.updateProjectionMatrix();}
+  const half=THREE.MathUtils.clamp(dist*.95,14,560);if(Math.abs(half-shHalf)>shHalf*.08){shHalf=half;const c=sun.shadow.camera;c.left=-half;c.right=half;c.top=half;c.bottom=-half;c.near=1;c.far=half*5+500;c.updateProjectionMatrix();}
+  const t=controls.target,sd=shHalf*2+220;sun.position.set(t.x+SUN_DIR.x*sd,SUN_DIR.y*sd,t.z+SUN_DIR.z*sd);sun.target.position.set(t.x,0,t.z);sun.target.updateMatrixWorld();
+  updPeople(dt,time,curPhase);updCows(dt,curPhase);updVeh(dt,curPhase);updTrain(dt);
+  renderer.render(scene,camera);
+  if(!document.body.classList.contains('clean')){const w=stage.clientWidth,h=stage.clientHeight;
+    labelObjs.forEach(o=>{let vis=o.ph<=curPhase&&camera.position.distanceTo(o.v)<o.near;if(vis){tmp.copy(o.v).project(camera);vis=tmp.z<1&&Math.abs(tmp.x)<1.02&&Math.abs(tmp.y)<1.02;}o.el.hidden=!vis;if(vis){o.el.style.left=((tmp.x+1)/2*w)+'px';o.el.style.top=((1-tmp.y)/2*h-18)+'px';}});
+    const az=Math.atan2(camera.position.x-t.x,camera.position.z-t.z);needle.setAttribute('transform',`rotate(${az*180/Math.PI} 15 15)`);}
+  if(STILL&&++FR>=4){window.DONE=true;return;}
+  requestAnimationFrame(frame);}
+if(STILL){[...Array(40)].forEach(()=>{updPeople(.3,time+=.3,curPhase);updVeh(.3,curPhase);});}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
